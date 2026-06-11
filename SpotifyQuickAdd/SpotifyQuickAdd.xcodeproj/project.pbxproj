@@ -1,0 +1,532 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		B10000000000000000000001 /* SpotifyQuickAddApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000001 /* SpotifyQuickAddApp.swift */; };
+		B10000000000000000000002 /* SpotifyConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000002 /* SpotifyConfig.swift */; };
+		B10000000000000000000003 /* AppError.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000003 /* AppError.swift */; };
+		B10000000000000000000004 /* SpotifyModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000004 /* SpotifyModels.swift */; };
+		B10000000000000000000005 /* KeychainManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000005 /* KeychainManager.swift */; };
+		B10000000000000000000006 /* SpotifyAuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000006 /* SpotifyAuthService.swift */; };
+		B10000000000000000000007 /* SpotifyAPIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000007 /* SpotifyAPIService.swift */; };
+		B10000000000000000000008 /* PlaylistManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000008 /* PlaylistManager.swift */; };
+		B10000000000000000000009 /* SettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000009 /* SettingsViewModel.swift */; };
+		B10000000000000000000010 /* AddSongViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000010 /* AddSongViewModel.swift */; };
+		B10000000000000000000011 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000011 /* ContentView.swift */; };
+		B10000000000000000000012 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000012 /* SettingsView.swift */; };
+		B10000000000000000000013 /* PlaylistPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000013 /* PlaylistPickerView.swift */; };
+		B10000000000000000000014 /* PKCEHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000014 /* PKCEHelper.swift */; };
+		B10000000000000000000015 /* SharedStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000015 /* SharedStorage.swift */; };
+		B10000000000000000000016 /* WebAuthPresentationContextProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000016 /* WebAuthPresentationContextProvider.swift */; };
+		B10000000000000000000017 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000017 /* Assets.xcassets */; };
+		B10000000000000000000018 /* SpotifyQuickAddWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000018 /* SpotifyQuickAddWidgetBundle.swift */; };
+		B10000000000000000000019 /* SpotifyQuickAddWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000019 /* SpotifyQuickAddWidget.swift */; };
+		B10000000000000000000020 /* SpotifyConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000020 /* SpotifyConfig.swift */; };
+		B10000000000000000000021 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000021 /* Assets.xcassets */; };
+		B10000000000000000000022 /* SpotifyQuickAddWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = P1000000000000000000000003 /* SpotifyQuickAddWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		C10000000000000000000001 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A10000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = T100000000000000000000002;
+			remoteInfo = SpotifyQuickAddWidgetExtension;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		E10000000000000000000001 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				B10000000000000000000022 /* SpotifyQuickAddWidgetExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		F10000000000000000000001 /* SpotifyQuickAddApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpotifyQuickAddApp.swift; sourceTree = "<group>"; };
+		F10000000000000000000002 /* SpotifyConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpotifyConfig.swift; sourceTree = "<group>"; };
+		F10000000000000000000003 /* AppError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppError.swift; sourceTree = "<group>"; };
+		F10000000000000000000004 /* SpotifyModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpotifyModels.swift; sourceTree = "<group>"; };
+		F10000000000000000000005 /* KeychainManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainManager.swift; sourceTree = "<group>"; };
+		F10000000000000000000006 /* SpotifyAuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpotifyAuthService.swift; sourceTree = "<group>"; };
+		F10000000000000000000007 /* SpotifyAPIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpotifyAPIService.swift; sourceTree = "<group>"; };
+		F10000000000000000000008 /* PlaylistManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaylistManager.swift; sourceTree = "<group>"; };
+		F10000000000000000000009 /* SettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewModel.swift; sourceTree = "<group>"; };
+		F10000000000000000000010 /* AddSongViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddSongViewModel.swift; sourceTree = "<group>"; };
+		F10000000000000000000011 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		F10000000000000000000012 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		F10000000000000000000013 /* PlaylistPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaylistPickerView.swift; sourceTree = "<group>"; };
+		F10000000000000000000014 /* PKCEHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PKCEHelper.swift; sourceTree = "<group>"; };
+		F10000000000000000000015 /* SharedStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedStorage.swift; sourceTree = "<group>"; };
+		F10000000000000000000016 /* WebAuthPresentationContextProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebAuthPresentationContextProvider.swift; sourceTree = "<group>"; };
+		F10000000000000000000017 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		F10000000000000000000018 /* SpotifyQuickAddWidgetBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpotifyQuickAddWidgetBundle.swift; sourceTree = "<group>"; };
+		F10000000000000000000019 /* SpotifyQuickAddWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpotifyQuickAddWidget.swift; sourceTree = "<group>"; };
+		F10000000000000000000020 /* SpotifyConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpotifyConfig.swift; sourceTree = "<group>"; };
+		F10000000000000000000021 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		F10000000000000000000022 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		F10000000000000000000023 /* SpotifyQuickAdd.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SpotifyQuickAdd.entitlements; sourceTree = "<group>"; };
+		F10000000000000000000024 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		F10000000000000000000025 /* SpotifyQuickAddWidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SpotifyQuickAddWidget.entitlements; sourceTree = "<group>"; };
+		P1000000000000000000000001 /* SpotifyQuickAdd.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SpotifyQuickAdd.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		P1000000000000000000000003 /* SpotifyQuickAddWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SpotifyQuickAddWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		FP100000000000000000000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FP100000000000000000000002 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		G10000000000000000000001 = {
+			isa = PBXGroup;
+			children = (
+				G10000000000000000000002 /* SpotifyQuickAdd */,
+				G10000000000000000000003 /* SpotifyQuickAddWidget */,
+				G10000000000000000000004 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		G10000000000000000000002 /* SpotifyQuickAdd */ = {
+			isa = PBXGroup;
+			children = (
+				F10000000000000000000001 /* SpotifyQuickAddApp.swift */,
+				G10000000000000000000005 /* Config */,
+				G10000000000000000000006 /* Models */,
+				G10000000000000000000007 /* Services */,
+				G10000000000000000000008 /* ViewModels */,
+				G10000000000000000000009 /* Views */,
+				G10000000000000000000010 /* Utilities */,
+				F10000000000000000000017 /* Assets.xcassets */,
+				F10000000000000000000022 /* Info.plist */,
+				F10000000000000000000023 /* SpotifyQuickAdd.entitlements */,
+			);
+			path = SpotifyQuickAdd;
+			sourceTree = "<group>";
+		};
+		G10000000000000000000003 /* SpotifyQuickAddWidget */ = {
+			isa = PBXGroup;
+			children = (
+				F10000000000000000000018 /* SpotifyQuickAddWidgetBundle.swift */,
+				F10000000000000000000019 /* SpotifyQuickAddWidget.swift */,
+				F10000000000000000000020 /* SpotifyConfig.swift */,
+				F10000000000000000000021 /* Assets.xcassets */,
+				F10000000000000000000024 /* Info.plist */,
+				F10000000000000000000025 /* SpotifyQuickAddWidget.entitlements */,
+			);
+			path = SpotifyQuickAddWidget;
+			sourceTree = "<group>";
+		};
+		G10000000000000000000004 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				P1000000000000000000000001 /* SpotifyQuickAdd.app */,
+				P1000000000000000000000003 /* SpotifyQuickAddWidgetExtension.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		G10000000000000000000005 /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				F10000000000000000000002 /* SpotifyConfig.swift */,
+			);
+			path = Config;
+			sourceTree = "<group>";
+		};
+		G10000000000000000000006 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				F10000000000000000000003 /* AppError.swift */,
+				F10000000000000000000004 /* SpotifyModels.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		G10000000000000000000007 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				F10000000000000000000005 /* KeychainManager.swift */,
+				F10000000000000000000006 /* SpotifyAuthService.swift */,
+				F10000000000000000000007 /* SpotifyAPIService.swift */,
+				F10000000000000000000008 /* PlaylistManager.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		G10000000000000000000008 /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				F10000000000000000000009 /* SettingsViewModel.swift */,
+				F10000000000000000000010 /* AddSongViewModel.swift */,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		G10000000000000000000009 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				F10000000000000000000011 /* ContentView.swift */,
+				F10000000000000000000012 /* SettingsView.swift */,
+				F10000000000000000000013 /* PlaylistPickerView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		G10000000000000000000010 /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+				F10000000000000000000014 /* PKCEHelper.swift */,
+				F10000000000000000000015 /* SharedStorage.swift */,
+				F10000000000000000000016 /* WebAuthPresentationContextProvider.swift */,
+			);
+			path = Utilities;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		T100000000000000000000001 /* SpotifyQuickAdd */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = L100000000000000000000003 /* Build configuration list for PBXNativeTarget "SpotifyQuickAdd" */;
+			buildPhases = (
+				S100000000000000000000001 /* Sources */,
+				FP100000000000000000000001 /* Frameworks */,
+				R100000000000000000000001 /* Resources */,
+				E10000000000000000000001 /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				D10000000000000000000001 /* PBXTargetDependency */,
+			);
+			name = SpotifyQuickAdd;
+			productName = SpotifyQuickAdd;
+			productReference = P1000000000000000000000001 /* SpotifyQuickAdd.app */;
+			productType = "com.apple.product-type.application";
+		};
+		T100000000000000000000002 /* SpotifyQuickAddWidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = L100000000000000000000004 /* Build configuration list for PBXNativeTarget "SpotifyQuickAddWidgetExtension" */;
+			buildPhases = (
+				S100000000000000000000002 /* Sources */,
+				FP100000000000000000000002 /* Frameworks */,
+				R100000000000000000000002 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = SpotifyQuickAddWidgetExtension;
+			productName = SpotifyQuickAddWidgetExtension;
+			productReference = P1000000000000000000000003 /* SpotifyQuickAddWidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		A10000000000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					T100000000000000000000001 = {
+						CreatedOnToolsVersion = 15.0;
+					};
+					T100000000000000000000002 = {
+						CreatedOnToolsVersion = 15.0;
+					};
+				};
+			};
+			buildConfigurationList = L100000000000000000000001 /* Build configuration list for PBXProject "SpotifyQuickAdd" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = G10000000000000000000001;
+			productRefGroup = G10000000000000000000004 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				T100000000000000000000001 /* SpotifyQuickAdd */,
+				T100000000000000000000002 /* SpotifyQuickAddWidgetExtension */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		R100000000000000000000001 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B10000000000000000000017 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		R100000000000000000000002 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B10000000000000000000021 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		S100000000000000000000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B10000000000000000000001 /* SpotifyQuickAddApp.swift in Sources */,
+				B10000000000000000000002 /* SpotifyConfig.swift in Sources */,
+				B10000000000000000000003 /* AppError.swift in Sources */,
+				B10000000000000000000004 /* SpotifyModels.swift in Sources */,
+				B10000000000000000000005 /* KeychainManager.swift in Sources */,
+				B10000000000000000000006 /* SpotifyAuthService.swift in Sources */,
+				B10000000000000000000007 /* SpotifyAPIService.swift in Sources */,
+				B10000000000000000000008 /* PlaylistManager.swift in Sources */,
+				B10000000000000000000009 /* SettingsViewModel.swift in Sources */,
+				B10000000000000000000010 /* AddSongViewModel.swift in Sources */,
+				B10000000000000000000011 /* ContentView.swift in Sources */,
+				B10000000000000000000012 /* SettingsView.swift in Sources */,
+				B10000000000000000000013 /* PlaylistPickerView.swift in Sources */,
+				B10000000000000000000014 /* PKCEHelper.swift in Sources */,
+				B10000000000000000000015 /* SharedStorage.swift in Sources */,
+				B10000000000000000000016 /* WebAuthPresentationContextProvider.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		S100000000000000000000002 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B10000000000000000000018 /* SpotifyQuickAddWidgetBundle.swift in Sources */,
+				B10000000000000000000019 /* SpotifyQuickAddWidget.swift in Sources */,
+				B10000000000000000000020 /* SpotifyConfig.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		D10000000000000000000001 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = T100000000000000000000002 /* SpotifyQuickAddWidgetExtension */;
+			targetProxy = C10000000000000000000001 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		X10000000000000000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		X10000000000000000000002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_OPTIMIZATION_LEVEL = s;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		X10000000000000000000003 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = SpotifyQuickAdd/SpotifyQuickAdd.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = SpotifyQuickAdd/Info.plist;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.yourname.spotifyquickadd;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		X10000000000000000000004 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = SpotifyQuickAdd/SpotifyQuickAdd.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = SpotifyQuickAdd/Info.plist;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.yourname.spotifyquickadd;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		X10000000000000000000005 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = SpotifyQuickAddWidget/SpotifyQuickAddWidget.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = SpotifyQuickAddWidget/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.yourname.spotifyquickadd.widget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		X10000000000000000000006 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = SpotifyQuickAddWidget/SpotifyQuickAddWidget.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = SpotifyQuickAddWidget/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.yourname.spotifyquickadd.widget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		L100000000000000000000001 /* Build configuration list for PBXProject "SpotifyQuickAdd" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				X10000000000000000000001 /* Debug */,
+				X10000000000000000000002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		L100000000000000000000003 /* Build configuration list for PBXNativeTarget "SpotifyQuickAdd" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				X10000000000000000000003 /* Debug */,
+				X10000000000000000000004 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		L100000000000000000000004 /* Build configuration list for PBXNativeTarget "SpotifyQuickAddWidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				X10000000000000000000005 /* Debug */,
+				X10000000000000000000006 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = A10000000000000000000001 /* Project object */;
+}
