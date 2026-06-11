@@ -10,6 +10,18 @@ struct CachedPlaylist: Codable, Identifiable, Equatable {
     let name: String
 }
 
+struct WidgetDuplicateWarning: Codable, Equatable {
+    let trackURI: String
+    let shownAt: Date
+}
+
+struct WidgetNowPlayingCache: Codable, Equatable {
+    let trackURI: String
+    let trackName: String
+    let artistName: String?
+    let updatedAt: Date
+}
+
 struct WidgetStatus: Codable, Equatable {
     let message: String
     let isError: Bool
@@ -45,7 +57,12 @@ final class SharedStorage {
         static let cachedPlaylists = "cachedPlaylistsJSON"
         static let widgetStatusPrefix = "widgetStatus_"
         static let widgetArtworkDataPrefix = "widgetArtworkData_"
+        static let widgetDuplicateWarningPrefix = "widgetDuplicateWarning_"
+        static let widgetNowPlayingPrefix = "widgetNowPlaying_"
     }
+
+    static let duplicateWarningDuration: TimeInterval = 8
+    static let nowPlayingRefreshInterval: TimeInterval = 30
 
     private let defaults: UserDefaults
     private let encoder = JSONEncoder()
@@ -172,6 +189,70 @@ final class SharedStorage {
     func clearWidgetStatus(for playlistID: String) {
         defaults.removeObject(forKey: Keys.widgetStatusPrefix + playlistID)
         clearWidgetArtwork(for: playlistID)
+        persist()
+    }
+
+    func duplicateWarning(for playlistID: String) -> WidgetDuplicateWarning? {
+        guard
+            let data = defaults.data(forKey: Keys.widgetDuplicateWarningPrefix + playlistID),
+            let warning = try? decoder.decode(WidgetDuplicateWarning.self, from: data)
+        else {
+            return nil
+        }
+        return warning
+    }
+
+    func setDuplicateWarning(trackURI: String, for playlistID: String, at date: Date = Date()) {
+        let warning = WidgetDuplicateWarning(trackURI: trackURI, shownAt: date)
+        guard let data = try? encoder.encode(warning) else { return }
+        defaults.set(data, forKey: Keys.widgetDuplicateWarningPrefix + playlistID)
+        persist()
+    }
+
+    func shouldShowDuplicateWarning(trackURI: String?, for playlistID: String, at date: Date = Date()) -> Bool {
+        guard let trackURI,
+              let warning = duplicateWarning(for: playlistID),
+              warning.trackURI == trackURI else {
+            return false
+        }
+        return date.timeIntervalSince(warning.shownAt) < Self.duplicateWarningDuration
+    }
+
+    func recordInPlaylistWarningIfNeeded(trackURI: String, for playlistID: String) {
+        if duplicateWarning(for: playlistID)?.trackURI != trackURI {
+            setDuplicateWarning(trackURI: trackURI, for: playlistID)
+        }
+    }
+
+    func nowPlayingCache(for playlistID: String) -> WidgetNowPlayingCache? {
+        guard
+            let data = defaults.data(forKey: Keys.widgetNowPlayingPrefix + playlistID),
+            let cache = try? decoder.decode(WidgetNowPlayingCache.self, from: data)
+        else {
+            return nil
+        }
+        return cache
+    }
+
+    func setNowPlayingCache(
+        trackURI: String,
+        trackName: String,
+        artistName: String?,
+        for playlistID: String
+    ) {
+        let cache = WidgetNowPlayingCache(
+            trackURI: trackURI,
+            trackName: trackName,
+            artistName: artistName,
+            updatedAt: Date()
+        )
+        guard let data = try? encoder.encode(cache) else { return }
+        defaults.set(data, forKey: Keys.widgetNowPlayingPrefix + playlistID)
+        persist()
+    }
+
+    func clearNowPlayingCache(for playlistID: String) {
+        defaults.removeObject(forKey: Keys.widgetNowPlayingPrefix + playlistID)
         persist()
     }
 

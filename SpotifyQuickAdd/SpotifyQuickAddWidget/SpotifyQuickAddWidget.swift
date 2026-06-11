@@ -13,6 +13,11 @@ struct PlaylistWidgetEntry: TimelineEntry {
     let trackName: String?
     let artistName: String?
     let artworkData: Data?
+    let nowPlayingTrackName: String?
+    let nowPlayingArtistName: String?
+    let nowPlayingArtworkData: Data?
+    let nowPlayingTrackURI: String?
+    let showInPlaylistWarning: Bool
 }
 
 struct AddCurrentSongWidgetView: View {
@@ -73,27 +78,27 @@ struct HomeScreenWidgetView: View {
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
 
-            if entry.hasTrackResult {
+            if entry.hasHomeNowPlaying {
                 HStack(alignment: .top, spacing: 8) {
                     WidgetArtworkImage(
-                        artworkData: entry.artworkData,
+                        artworkData: entry.homeArtworkData,
                         size: artworkSize,
                         cornerRadius: 8
                     )
 
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(entry.trackName ?? "")
+                        Text(entry.homeTrackName ?? "")
                             .font(.subheadline.weight(.semibold))
                             .lineLimit(2)
                             .minimumScaleFactor(0.85)
-                        if let artistName = entry.artistName {
+                        if let artistName = entry.homeArtistName {
                             Text(artistName)
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                                 .lineLimit(2)
                                 .minimumScaleFactor(0.85)
                         }
-                        if entry.isDuplicateTrackResult {
+                        if entry.showInPlaylistWarning {
                             Text("Already in playlist")
                                 .font(.caption2)
                                 .foregroundStyle(.orange)
@@ -101,11 +106,16 @@ struct HomeScreenWidgetView: View {
                         }
                     }
                 }
-            } else if entry.statusMessage != nil {
+            } else if entry.homeShowsActionStatus {
                 Text(entry.cleanStatusMessage)
                     .font(.caption2)
                     .foregroundStyle(entry.statusTextColor)
                     .lineLimit(3)
+            } else {
+                Text("Nothing playing")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
             }
 
             if let playlist = entry.playlistEntity {
@@ -136,19 +146,22 @@ struct LockScreenInlineWidgetView: View {
     let entry: PlaylistWidgetEntry
 
     var body: some View {
-        if let playlist = entry.playlistEntity {
-            Button(intent: AddCurrentSongIntent(playlist: playlist)) {
-                Label {
-                    Text(entry.inlineActionText)
-                        .lineLimit(2)
-                } icon: {
-                    Image(systemName: entry.statusIsSuccess ? "checkmark.circle" : "music.note.list")
+        Group {
+            if let playlist = entry.playlistEntity {
+                Button(intent: AddCurrentSongIntent(playlist: playlist)) {
+                    Label {
+                        Text(entry.inlineActionText)
+                            .lineLimit(2)
+                    } icon: {
+                        Image(systemName: entry.statusIsSuccess ? "checkmark.circle" : "music.note.list")
+                    }
                 }
+                .buttonStyle(.plain)
+            } else {
+                Label("Set up playlist", systemImage: "exclamationmark.triangle")
             }
-            .buttonStyle(.plain)
-        } else {
-            Label("Set up playlist", systemImage: "exclamationmark.triangle")
         }
+        .containerBackground(.clear, for: .widget)
     }
 }
 
@@ -156,29 +169,27 @@ struct LockScreenCircularWidgetView: View {
     let entry: PlaylistWidgetEntry
 
     var body: some View {
-        if let playlist = entry.playlistEntity {
-            Button(intent: AddCurrentSongIntent(playlist: playlist)) {
-                ZStack {
-                    if entry.showsArtwork,
-                       let data = entry.artworkData,
-                       let uiImage = UIImage(data: data) {
-                        Image(uiImage: uiImage)
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                            .clipShape(Circle())
-                    } else {
-                        AccessoryWidgetBackground()
-                        Image(systemName: "plus")
-                            .font(.title2.weight(.semibold))
-                    }
+        Group {
+            if let playlist = entry.playlistEntity {
+                Button(intent: AddCurrentSongIntent(playlist: playlist)) {
+                    Image(systemName: "plus")
+                        .font(.title2.weight(.semibold))
                 }
-            }
-            .buttonStyle(.plain)
-        } else {
-            ZStack {
-                AccessoryWidgetBackground()
+                .buttonStyle(.plain)
+            } else {
                 Image(systemName: "exclamationmark")
                     .font(.title3.weight(.semibold))
+            }
+        }
+        .containerBackground(for: .widget) {
+            if entry.showsArtwork,
+               let data = entry.artworkData,
+               let uiImage = UIImage(data: data) {
+                Image(uiImage: uiImage)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+            } else {
+                AccessoryWidgetBackground()
             }
         }
     }
@@ -188,50 +199,55 @@ struct LockScreenRectangularWidgetView: View {
     let entry: PlaylistWidgetEntry
 
     var body: some View {
-        if let playlist = entry.playlistEntity {
-            Button(intent: AddCurrentSongIntent(playlist: playlist)) {
-                HStack(alignment: .top, spacing: 8) {
-                    if entry.showsArtwork {
-                        WidgetArtworkImage(
-                            artworkData: entry.artworkData,
-                            size: 44,
-                            cornerRadius: 6
-                        )
-                    }
-
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(entry.playlistName)
-                            .font(.headline)
-                            .lineLimit(1)
-
-                        if entry.hasTrackResult, let trackName = entry.trackName {
-                            Text(trackName)
-                                .font(.caption.weight(.semibold))
-                                .lineLimit(2)
-                            if let artistName = entry.artistName {
-                                Text(artistName)
-                                    .font(.caption2)
-                                    .foregroundStyle(.secondary)
-                                    .lineLimit(1)
-                            }
-                        } else {
-                            Text(entry.lockScreenSubtitle)
-                                .font(.caption)
-                                .lineLimit(2)
+        Group {
+            if let playlist = entry.playlistEntity {
+                Button(intent: AddCurrentSongIntent(playlist: playlist)) {
+                    HStack(alignment: .top, spacing: 8) {
+                        if entry.showsArtwork {
+                            WidgetArtworkImage(
+                                artworkData: entry.artworkData,
+                                size: 44,
+                                cornerRadius: 6
+                            )
                         }
+
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(entry.playlistName)
+                                .font(.headline)
+                                .lineLimit(1)
+
+                            if entry.hasTrackResult, let trackName = entry.trackName {
+                                Text(trackName)
+                                    .font(.caption.weight(.semibold))
+                                    .lineLimit(2)
+                                if let artistName = entry.artistName {
+                                    Text(artistName)
+                                        .font(.caption2)
+                                        .foregroundStyle(.secondary)
+                                        .lineLimit(1)
+                                }
+                            } else {
+                                Text(entry.lockScreenSubtitle)
+                                    .font(.caption)
+                                    .lineLimit(2)
+                            }
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
+                .buttonStyle(.plain)
+            } else {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Spotify Quick Add")
+                        .font(.headline)
+                    Text("Configure playlist")
+                        .font(.caption)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .buttonStyle(.plain)
-        } else {
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Spotify Quick Add")
-                    .font(.headline)
-                Text("Configure playlist")
-                    .font(.caption)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .containerBackground(for: .widget) {
+            AccessoryWidgetBackground()
         }
     }
 }
@@ -241,8 +257,29 @@ private extension PlaylistWidgetEntry {
         statusIsSuccess && trackName != nil
     }
 
-    var isDuplicateTrackResult: Bool {
-        cleanStatusMessage.localizedCaseInsensitiveContains("already in playlist")
+    var hasHomeNowPlaying: Bool {
+        homeTrackName != nil
+    }
+
+    var homeTrackName: String? {
+        nowPlayingTrackName ?? trackName
+    }
+
+    var homeArtistName: String? {
+        nowPlayingArtistName ?? artistName
+    }
+
+    var homeArtworkData: Data? {
+        nowPlayingArtworkData ?? artworkData
+    }
+
+    var homeShowsActionStatus: Bool {
+        guard let statusMessage else { return false }
+        if statusIsError { return true }
+        if cleanStatusMessage.localizedCaseInsensitiveContains("already in playlist") {
+            return false
+        }
+        return !statusMessage.isEmpty
     }
 
     var showsArtwork: Bool {
@@ -326,27 +363,88 @@ struct PlaylistWidgetProvider: AppIntentTimelineProvider {
             statusIsSuccess: false,
             trackName: nil,
             artistName: nil,
-            artworkData: nil
+            artworkData: nil,
+            nowPlayingTrackName: "Current Song",
+            nowPlayingArtistName: "Artist",
+            nowPlayingArtworkData: nil,
+            nowPlayingTrackURI: nil,
+            showInPlaylistWarning: false
         )
     }
 
     func snapshot(for configuration: ConfigurePlaylistWidgetIntent, in context: Context) async -> PlaylistWidgetEntry {
-        makeEntry(for: configuration)
+        makeCachedEntry(for: configuration)
     }
 
     func timeline(for configuration: ConfigurePlaylistWidgetIntent, in context: Context) async -> Timeline<PlaylistWidgetEntry> {
-        let entry = makeEntry(for: configuration)
-        return Timeline(entries: [entry], policy: .atEnd)
+        let now = Date()
+        let playlist = configuration.playlist
+        let playlistID = playlist?.id ?? SharedStorage.unconfiguredWidgetStatusKey
+        let nowPlaying = await WidgetNowPlayingFetcher.fetch(for: playlist)
+        let showWarning = SharedStorage.shared.shouldShowDuplicateWarning(
+            trackURI: nowPlaying?.trackURI,
+            for: playlistID,
+            at: now
+        )
+
+        var entries = [
+            makeEntry(
+                for: configuration,
+                nowPlaying: nowPlaying,
+                showInPlaylistWarning: showWarning,
+                date: now
+            )
+        ]
+
+        if showWarning,
+           let warning = SharedStorage.shared.duplicateWarning(for: playlistID) {
+            let warningEnd = warning.shownAt.addingTimeInterval(SharedStorage.duplicateWarningDuration)
+            if warningEnd > now {
+                entries.append(
+                    makeEntry(
+                        for: configuration,
+                        nowPlaying: nowPlaying,
+                        showInPlaylistWarning: false,
+                        date: warningEnd
+                    )
+                )
+            }
+        }
+
+        let refreshDate = now.addingTimeInterval(SharedStorage.nowPlayingRefreshInterval)
+        return Timeline(entries: entries, policy: .after(refreshDate))
     }
 
-    private func makeEntry(for configuration: ConfigurePlaylistWidgetIntent) -> PlaylistWidgetEntry {
+    private func makeCachedEntry(for configuration: ConfigurePlaylistWidgetIntent) -> PlaylistWidgetEntry {
+        let playlist = configuration.playlist
+        let playlistID = playlist?.id ?? SharedStorage.unconfiguredWidgetStatusKey
+        let nowPlaying = WidgetNowPlayingFetcher.cached(for: playlistID)
+        let showWarning = SharedStorage.shared.shouldShowDuplicateWarning(
+            trackURI: nowPlaying?.trackURI,
+            for: playlistID
+        )
+
+        return makeEntry(
+            for: configuration,
+            nowPlaying: nowPlaying,
+            showInPlaylistWarning: showWarning,
+            date: Date()
+        )
+    }
+
+    private func makeEntry(
+        for configuration: ConfigurePlaylistWidgetIntent,
+        nowPlaying: WidgetNowPlayingInfo?,
+        showInPlaylistWarning: Bool,
+        date: Date
+    ) -> PlaylistWidgetEntry {
         let playlist = configuration.playlist
         let playlistName = resolvedPlaylistName(for: playlist)
         let status = widgetStatus(for: playlist)
         let playlistID = playlist?.id ?? SharedStorage.unconfiguredWidgetStatusKey
 
         return PlaylistWidgetEntry(
-            date: Date(),
+            date: date,
             playlistEntity: playlist,
             playlistName: playlistName,
             statusMessage: status?.message,
@@ -354,7 +452,12 @@ struct PlaylistWidgetProvider: AppIntentTimelineProvider {
             statusIsSuccess: status?.isSuccess ?? false,
             trackName: status?.trackName,
             artistName: status?.artistName,
-            artworkData: SharedStorage.shared.widgetArtworkData(for: playlistID)
+            artworkData: SharedStorage.shared.widgetArtworkData(for: playlistID),
+            nowPlayingTrackName: nowPlaying?.trackName,
+            nowPlayingArtistName: nowPlaying?.artistName,
+            nowPlayingArtworkData: nowPlaying?.artworkData,
+            nowPlayingTrackURI: nowPlaying?.trackURI,
+            showInPlaylistWarning: showInPlaylistWarning
         )
     }
 
@@ -371,5 +474,91 @@ struct PlaylistWidgetProvider: AppIntentTimelineProvider {
             return SharedStorage.shared.widgetStatus(for: playlist.id)
         }
         return SharedStorage.shared.widgetStatus(for: SharedStorage.unconfiguredWidgetStatusKey)
+    }
+}
+
+struct WidgetNowPlayingInfo {
+    let trackURI: String
+    let trackName: String
+    let artistName: String?
+    let artworkData: Data?
+}
+
+enum WidgetNowPlayingFetcher {
+    static func fetch(for playlist: PlaylistEntity?) async -> WidgetNowPlayingInfo? {
+        let playlistID = playlist?.id ?? SharedStorage.unconfiguredWidgetStatusKey
+        let tokenProvider = SpotifyTokenProvider()
+        tokenProvider.refreshLoginState()
+
+        guard tokenProvider.isLoggedIn else {
+            return cached(for: playlistID)
+        }
+
+        let apiService = SpotifyAPIService(tokenProvider: tokenProvider)
+
+        do {
+            let track = try await apiService.fetchCurrentlyPlaying()
+            guard let trackURI = track.uri else {
+                SharedStorage.shared.clearNowPlayingCache(for: playlistID)
+                return nil
+            }
+
+            if let playlistID = playlist?.id {
+                let isInPlaylist = (try? await apiService.playlistContainsTrack(
+                    playlistId: playlistID,
+                    trackURI: trackURI
+                )) ?? false
+
+                if isInPlaylist {
+                    SharedStorage.shared.recordInPlaylistWarningIfNeeded(
+                        trackURI: trackURI,
+                        for: playlistID
+                    )
+                }
+            }
+
+            var artworkData: Data?
+            if let artworkURL = track.artworkURL {
+                artworkData = await WidgetAddSongService.downloadArtwork(from: artworkURL)
+                if let artworkData {
+                    SharedStorage.shared.saveWidgetArtwork(artworkData, for: playlistID)
+                }
+            } else {
+                artworkData = SharedStorage.shared.widgetArtworkData(for: playlistID)
+            }
+
+            let trackName = track.name ?? "Track"
+            SharedStorage.shared.setNowPlayingCache(
+                trackURI: trackURI,
+                trackName: trackName,
+                artistName: track.primaryArtist,
+                for: playlistID
+            )
+
+            return WidgetNowPlayingInfo(
+                trackURI: trackURI,
+                trackName: trackName,
+                artistName: track.primaryArtist,
+                artworkData: artworkData
+            )
+        } catch let error as AppError where error == .nothingPlaying {
+            SharedStorage.shared.clearNowPlayingCache(for: playlistID)
+            return nil
+        } catch {
+            return cached(for: playlistID)
+        }
+    }
+
+    static func cached(for playlistID: String) -> WidgetNowPlayingInfo? {
+        guard let cache = SharedStorage.shared.nowPlayingCache(for: playlistID) else {
+            return nil
+        }
+
+        return WidgetNowPlayingInfo(
+            trackURI: cache.trackURI,
+            trackName: cache.trackName,
+            artistName: cache.artistName,
+            artworkData: SharedStorage.shared.widgetArtworkData(for: playlistID)
+        )
     }
 }

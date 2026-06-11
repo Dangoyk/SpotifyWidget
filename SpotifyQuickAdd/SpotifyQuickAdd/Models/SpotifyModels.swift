@@ -85,6 +85,7 @@ struct AddedTrackResult: Equatable {
     let trackName: String
     let artistName: String?
     let artworkURL: URL?
+    let trackURI: String?
 }
 
 struct PlaylistsResponse: Decodable {

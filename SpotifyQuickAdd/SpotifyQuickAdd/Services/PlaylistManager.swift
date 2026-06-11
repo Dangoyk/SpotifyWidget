@@ -52,7 +52,8 @@ final class PlaylistManager {
                             message: "Already in playlist",
                             trackName: trackName,
                             artistName: track.primaryArtist,
-                            artworkURL: track.artworkURL
+                            artworkURL: track.artworkURL,
+                            trackURI: trackURI
                         )
                     )
                 }
@@ -73,7 +74,8 @@ final class PlaylistManager {
                     message: message,
                     trackName: trackName,
                     artistName: track.primaryArtist,
-                    artworkURL: track.artworkURL
+                    artworkURL: track.artworkURL,
+                    trackURI: trackURI
                 )
             )
         } catch let error as AppError {

@@ -49,6 +49,7 @@ struct WidgetAddSongOutcome {
     let trackName: String?
     let artistName: String?
     let artworkURL: URL?
+    let trackURI: String?
 }
 
 enum WidgetAddSongService {
@@ -75,7 +76,8 @@ enum WidgetAddSongService {
                 isSuccess: true,
                 trackName: added.trackName,
                 artistName: added.artistName,
-                artworkURL: added.artworkURL
+                artworkURL: added.artworkURL,
+                trackURI: added.trackURI
             )
         case .failure(let error):
             return formattedFailure(error)
@@ -90,7 +92,8 @@ enum WidgetAddSongService {
             isSuccess: false,
             trackName: nil,
             artistName: nil,
-            artworkURL: nil
+            artworkURL: nil,
+            trackURI: nil
         )
     }
 
@@ -98,6 +101,12 @@ enum WidgetAddSongService {
         var artworkData: Data?
         if outcome.isSuccess, let artworkURL = outcome.artworkURL {
             artworkData = await downloadArtwork(from: artworkURL)
+        }
+
+        if outcome.isSuccess,
+           outcome.isError,
+           let trackURI = outcome.trackURI {
+            SharedStorage.shared.setDuplicateWarning(trackURI: trackURI, for: playlistID)
         }
 
         SharedStorage.shared.setWidgetStatus(
@@ -111,7 +120,7 @@ enum WidgetAddSongService {
         )
     }
 
-    private static func downloadArtwork(from url: URL) async -> Data? {
+    static func downloadArtwork(from url: URL) async -> Data? {
         var request = URLRequest(url: url)
         request.timeoutInterval = 15
 
