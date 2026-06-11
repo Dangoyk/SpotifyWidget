@@ -113,13 +113,6 @@ final class SpotifyAuthService: NSObject, ObservableObject, SpotifyTokenProvidin
             return try await callbackExchangeTask.value
         }
 
-        if isLoggedIn,
-           pendingCodeVerifier == nil,
-           let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
-           components.queryItems?.contains(where: { $0.name == "code" }) == true {
-            return
-        }
-
         let task = Task { @MainActor in
             try await self.exchangeAuthorizationCode(from: url)
         }

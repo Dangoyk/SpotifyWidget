@@ -100,6 +100,7 @@ struct SettingsView: View {
         }
         .onAppear {
             viewModel.syncLoginState()
+            WidgetReloader.reloadWidgets()
         }
     }
 }

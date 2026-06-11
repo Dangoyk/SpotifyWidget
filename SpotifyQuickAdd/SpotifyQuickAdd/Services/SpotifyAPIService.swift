@@ -10,7 +10,7 @@ final class SpotifyAPIService {
     }
 
     func fetchCurrentlyPlaying() async throws -> SpotifyPlayableItem {
-        let url = SpotifyConfig.apiBaseURL.appendingPathComponent("me/player/currently-playing")
+        let url = URL.spotifyAPI(path: "me/player/currently-playing")
         let (data, response) = try await authorizedRequest(url: url, method: "GET")
 
         guard let httpResponse = response as? HTTPURLResponse else {
@@ -48,9 +48,7 @@ final class SpotifyAPIService {
     }
 
     func fetchTrack(id: String) async throws -> SpotifyPlayableItem {
-        let url = SpotifyConfig.apiBaseURL
-            .appendingPathComponent("tracks")
-            .appendingPathComponent(id)
+        let url = URL.spotifyAPI(path: "tracks/\(id)")
         let (data, response) = try await authorizedRequest(url: url, method: "GET")
 
         guard let httpResponse = response as? HTTPURLResponse else {
@@ -82,7 +80,7 @@ final class SpotifyAPIService {
     }
 
     func fetchCurrentUser() async throws -> SpotifyUser {
-        let url = SpotifyConfig.apiBaseURL.appendingPathComponent("me")
+        let url = URL.spotifyAPI(path: "me")
         let (data, response) = try await authorizedRequest(url: url, method: "GET")
 
         guard let httpResponse = response as? HTTPURLResponse else {
@@ -105,13 +103,13 @@ final class SpotifyAPIService {
         let allPlaylists = try await fetchUserPlaylists()
 
         return allPlaylists.filter { playlist in
-            playlist.owner?.id == currentUser.id
+            playlist.owner?.id == currentUser.id || playlist.collaborative == true
         }
     }
 
     func fetchUserPlaylists() async throws -> [SpotifyPlaylist] {
         var allPlaylists: [SpotifyPlaylist] = []
-        var nextURL: URL? = SpotifyConfig.apiBaseURL.appendingPathComponent("me/playlists")
+        var nextURL: URL? = URL.spotifyAPI(path: "me/playlists")
         var isFirstPage = true
 
         while let url = nextURL {
@@ -155,10 +153,7 @@ final class SpotifyAPIService {
     }
 
     func playlistContainsTrack(playlistId: String, trackURI: String) async throws -> Bool {
-        var nextURL: URL? = SpotifyConfig.apiBaseURL
-            .appendingPathComponent("playlists")
-            .appendingPathComponent(playlistId)
-            .appendingPathComponent("items")
+        var nextURL: URL? = URL.spotifyAPI(path: "playlists/\(playlistId)/items")
 
         var isFirstPage = true
 
@@ -210,10 +205,7 @@ final class SpotifyAPIService {
     }
 
     func addTrackToPlaylist(playlistId: String, trackURI: String) async throws {
-        let url = SpotifyConfig.apiBaseURL
-            .appendingPathComponent("playlists")
-            .appendingPathComponent(playlistId)
-            .appendingPathComponent("items")
+        let url = URL.spotifyAPI(path: "playlists/\(playlistId)/items")
 
         let body = AddTracksRequest(uris: [trackURI])
         let encodedBody = try JSONEncoder().encode(body)
@@ -295,5 +287,11 @@ final class SpotifyAPIService {
             return String(data: data, encoding: .utf8)
         }
         return decoded.error?.message
+    }
+}
+
+private extension URL {
+    static func spotifyAPI(path: String) -> URL {
+        SpotifyConfig.apiBaseURL.appending(path: path)
     }
 }

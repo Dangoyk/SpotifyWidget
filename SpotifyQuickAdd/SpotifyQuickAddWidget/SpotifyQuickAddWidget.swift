@@ -288,24 +288,21 @@ private extension PlaylistWidgetEntry {
     }
 
     var homeTrackName: String? {
-        nowPlayingTrackName ?? trackName
+        nowPlayingTrackName
     }
 
     var homeArtistName: String? {
-        nowPlayingArtistName ?? artistName
+        nowPlayingArtistName
     }
 
     var homeArtworkData: Data? {
-        nowPlayingArtworkData ?? artworkData
+        nowPlayingArtworkData
     }
 
     var homeShowsActionStatus: Bool {
-        guard let statusMessage else { return false }
-        if statusIsError { return true }
-        if cleanStatusMessage.localizedCaseInsensitiveContains("already in playlist") {
-            return false
-        }
-        return !statusMessage.isEmpty
+        guard let statusMessage, statusIsError else { return false }
+        guard let statusUpdatedAt else { return true }
+        return date.timeIntervalSince(statusUpdatedAt) < SharedStorage.lockScreenFeedbackDuration
     }
 
     var showsArtwork: Bool {
@@ -467,7 +464,21 @@ struct PlaylistWidgetProvider: AppIntentTimelineProvider {
     }
 
     func snapshot(for configuration: ConfigurePlaylistWidgetIntent, in context: Context) async -> PlaylistWidgetEntry {
-        makeCachedEntry(for: configuration)
+        let playlist = WidgetPlaylistResolver.effectivePlaylist(widgetPlaylist: configuration.playlist)
+        let playlistID = playlist?.id ?? SharedStorage.unconfiguredWidgetStatusKey
+        let nowPlaying = await WidgetNowPlayingFetcher.fetch(for: playlist)
+            ?? WidgetNowPlayingFetcher.cached(for: playlistID)
+        let showWarning = SharedStorage.shared.shouldShowDuplicateWarning(
+            trackURI: nowPlaying?.trackURI,
+            for: playlistID
+        )
+
+        return makeEntry(
+            for: configuration,
+            nowPlaying: nowPlaying,
+            showInPlaylistWarning: showWarning,
+            date: Date()
+        )
     }
 
     func timeline(for configuration: ConfigurePlaylistWidgetIntent, in context: Context) async -> Timeline<PlaylistWidgetEntry> {
@@ -505,7 +516,7 @@ struct PlaylistWidgetProvider: AppIntentTimelineProvider {
             }
         }
 
-        if let status = widgetStatus(for: playlist) {
+        if let status = widgetStatus(for: playlist, at: now) {
             let feedbackEnd = status.updatedAt.addingTimeInterval(SharedStorage.lockScreenFeedbackDuration)
             if feedbackEnd > now {
                 entries.append(
@@ -519,27 +530,25 @@ struct PlaylistWidgetProvider: AppIntentTimelineProvider {
             }
         }
 
-        entries.sort { $0.date < $1.date }
-
         let refreshDate = now.addingTimeInterval(SharedStorage.nowPlayingRefreshInterval)
-        return Timeline(entries: entries, policy: .after(refreshDate))
-    }
+        let latestEntryDate = entries.map(\.date).max() ?? now
+        let reloadDate = max(refreshDate, latestEntryDate.addingTimeInterval(1))
 
-    private func makeCachedEntry(for configuration: ConfigurePlaylistWidgetIntent) -> PlaylistWidgetEntry {
-        let playlist = WidgetPlaylistResolver.effectivePlaylist(widgetPlaylist: configuration.playlist)
-        let playlistID = playlist?.id ?? SharedStorage.unconfiguredWidgetStatusKey
-        let nowPlaying = WidgetNowPlayingFetcher.cached(for: playlistID)
-        let showWarning = SharedStorage.shared.shouldShowDuplicateWarning(
-            trackURI: nowPlaying?.trackURI,
-            for: playlistID
+        entries.append(
+            makeEntry(
+                for: configuration,
+                nowPlaying: nowPlaying,
+                showInPlaylistWarning: SharedStorage.shared.shouldShowDuplicateWarning(
+                    trackURI: nowPlaying?.trackURI,
+                    for: playlistID,
+                    at: reloadDate
+                ),
+                date: reloadDate
+            )
         )
 
-        return makeEntry(
-            for: configuration,
-            nowPlaying: nowPlaying,
-            showInPlaylistWarning: showWarning,
-            date: Date()
-        )
+        entries.sort { $0.date < $1.date }
+        return Timeline(entries: entries, policy: .atEnd)
     }
 
     private func makeEntry(
@@ -550,7 +559,7 @@ struct PlaylistWidgetProvider: AppIntentTimelineProvider {
     ) -> PlaylistWidgetEntry {
         let playlist = WidgetPlaylistResolver.effectivePlaylist(widgetPlaylist: configuration.playlist)
         let playlistName = resolvedPlaylistName(for: playlist)
-        let status = widgetStatus(for: playlist)
+        let status = widgetStatus(for: playlist, at: date)
         let playlistID = playlist?.id ?? SharedStorage.unconfiguredWidgetStatusKey
 
         return PlaylistWidgetEntry(
@@ -562,7 +571,7 @@ struct PlaylistWidgetProvider: AppIntentTimelineProvider {
             statusIsSuccess: status?.isSuccess ?? false,
             trackName: status?.trackName,
             artistName: status?.artistName,
-            artworkData: SharedStorage.shared.widgetArtworkData(for: playlistID),
+            artworkData: SharedStorage.shared.resultArtworkData(for: playlistID),
             nowPlayingTrackName: nowPlaying?.trackName,
             nowPlayingArtistName: nowPlaying?.artistName,
             nowPlayingArtworkData: nowPlaying?.artworkData,
@@ -580,11 +589,19 @@ struct PlaylistWidgetProvider: AppIntentTimelineProvider {
         return cachedName ?? playlist.name
     }
 
-    private func widgetStatus(for playlist: PlaylistEntity?) -> WidgetStatus? {
+    private func widgetStatus(for playlist: PlaylistEntity?, at date: Date) -> WidgetStatus? {
+        let rawStatus: WidgetStatus?
         if let playlist {
-            return SharedStorage.shared.widgetStatus(for: playlist.id)
+            rawStatus = SharedStorage.shared.widgetStatus(for: playlist.id)
+        } else {
+            rawStatus = SharedStorage.shared.widgetStatus(for: SharedStorage.unconfiguredWidgetStatusKey)
         }
-        return SharedStorage.shared.widgetStatus(for: SharedStorage.unconfiguredWidgetStatusKey)
+
+        guard let rawStatus else { return nil }
+        if date.timeIntervalSince(rawStatus.updatedAt) >= SharedStorage.lockScreenFeedbackDuration {
+            return nil
+        }
+        return rawStatus
     }
 }
 
@@ -602,7 +619,7 @@ enum WidgetNowPlayingFetcher {
         tokenProvider.refreshLoginState()
 
         guard tokenProvider.isLoggedIn else {
-            return cached(for: playlistID)
+            return nil
         }
 
         let apiService = SpotifyAPIService(tokenProvider: tokenProvider)
@@ -611,31 +628,18 @@ enum WidgetNowPlayingFetcher {
             let track = try await apiService.fetchCurrentlyPlaying()
             guard let trackURI = track.uri else {
                 SharedStorage.shared.clearNowPlayingCache(for: playlistID)
+                SharedStorage.shared.clearNowPlayingArtwork(for: playlistID)
                 return nil
-            }
-
-            if let playlistID = playlist?.id {
-                let isInPlaylist = (try? await apiService.playlistContainsTrack(
-                    playlistId: playlistID,
-                    trackURI: trackURI
-                )) ?? false
-
-                if isInPlaylist {
-                    SharedStorage.shared.recordInPlaylistWarningIfNeeded(
-                        trackURI: trackURI,
-                        for: playlistID
-                    )
-                }
             }
 
             var artworkData: Data?
             if let artworkURL = track.artworkURL {
                 artworkData = await WidgetAddSongService.downloadArtwork(from: artworkURL)
                 if let artworkData {
-                    SharedStorage.shared.saveWidgetArtwork(artworkData, for: playlistID)
+                    SharedStorage.shared.saveNowPlayingArtwork(artworkData, for: playlistID)
                 }
             } else {
-                artworkData = SharedStorage.shared.widgetArtworkData(for: playlistID)
+                artworkData = SharedStorage.shared.nowPlayingArtworkData(for: playlistID)
             }
 
             let trackName = track.name ?? "Track"
@@ -654,6 +658,7 @@ enum WidgetNowPlayingFetcher {
             )
         } catch let error as AppError where error == .nothingPlaying {
             SharedStorage.shared.clearNowPlayingCache(for: playlistID)
+            SharedStorage.shared.clearNowPlayingArtwork(for: playlistID)
             return nil
         } catch {
             return cached(for: playlistID)
@@ -669,7 +674,7 @@ enum WidgetNowPlayingFetcher {
             trackURI: cache.trackURI,
             trackName: cache.trackName,
             artistName: cache.artistName,
-            artworkData: SharedStorage.shared.widgetArtworkData(for: playlistID)
+            artworkData: SharedStorage.shared.nowPlayingArtworkData(for: playlistID)
         )
     }
 }

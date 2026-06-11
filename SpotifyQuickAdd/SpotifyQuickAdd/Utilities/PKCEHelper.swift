@@ -1,5 +1,6 @@
 import CryptoKit
 import Foundation
+import Security
 
 enum PKCEHelper {
     static func generateCodeVerifier() -> String {

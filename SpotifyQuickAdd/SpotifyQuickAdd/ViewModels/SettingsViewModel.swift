@@ -1,5 +1,4 @@
 import Foundation
-import WidgetKit
 
 @MainActor
 final class SettingsViewModel: ObservableObject {
@@ -95,10 +94,11 @@ final class SettingsViewModel: ObservableObject {
         selectedPlaylist = nil
         storage.selectedPlaylist = nil
         storage.clearCachedPlaylists()
+        storage.clearAllWidgetState()
         isLoggedIn = false
         didAttemptPlaylistBootstrap = false
         refreshCachedPlaylistCount()
-        WidgetCenter.shared.reloadTimelines(ofKind: SpotifyConfig.widgetKind)
+        WidgetReloader.reloadWidgets()
         showSuccess("Signed out of Spotify.")
     }
 
@@ -121,7 +121,7 @@ final class SettingsViewModel: ObservableObject {
             playlists = try await apiService.fetchEditablePlaylists()
             storage.cachePlaylists(playlists)
             refreshCachedPlaylistCount()
-            WidgetCenter.shared.reloadTimelines(ofKind: SpotifyConfig.widgetKind)
+            WidgetReloader.reloadWidgets()
 
             if let selected = selectedPlaylist,
                !playlists.contains(where: { $0.id == selected.id }) {
@@ -156,7 +156,7 @@ final class SettingsViewModel: ObservableObject {
         let selected = SelectedPlaylist(id: playlist.id, name: playlist.name)
         selectedPlaylist = selected
         storage.selectedPlaylist = selected
-        WidgetCenter.shared.reloadTimelines(ofKind: SpotifyConfig.widgetKind)
+        WidgetReloader.reloadWidgets()
         showSuccess("Selected \"\(playlist.name)\" for widgets.")
     }
 

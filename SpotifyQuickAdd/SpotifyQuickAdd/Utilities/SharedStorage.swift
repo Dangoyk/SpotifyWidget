@@ -56,14 +56,15 @@ final class SharedStorage {
         static let selectedPlaylistName = "selectedPlaylistName"
         static let cachedPlaylists = "cachedPlaylistsJSON"
         static let widgetStatusPrefix = "widgetStatus_"
-        static let widgetArtworkDataPrefix = "widgetArtworkData_"
+        static let widgetResultArtworkPrefix = "widgetResultArtwork_"
+        static let widgetNowPlayingArtworkPrefix = "widgetNowPlayingArtwork_"
         static let widgetDuplicateWarningPrefix = "widgetDuplicateWarning_"
         static let widgetNowPlayingPrefix = "widgetNowPlaying_"
     }
 
     static let duplicateWarningDuration: TimeInterval = 8
     static let lockScreenFeedbackDuration: TimeInterval = 8
-    static let nowPlayingRefreshInterval: TimeInterval = 30
+    static let nowPlayingRefreshInterval: TimeInterval = 15
 
     private let defaults: UserDefaults
     private let encoder = JSONEncoder()
@@ -170,9 +171,9 @@ final class SharedStorage {
         artworkData: Data? = nil
     ) {
         if let artworkData, !artworkData.isEmpty {
-            saveWidgetArtwork(artworkData, for: playlistID)
+            saveResultArtwork(artworkData, for: playlistID)
         } else if isError {
-            clearWidgetArtwork(for: playlistID)
+            clearResultArtwork(for: playlistID)
         }
 
         let status = WidgetStatus(
@@ -189,8 +190,28 @@ final class SharedStorage {
 
     func clearWidgetStatus(for playlistID: String) {
         defaults.removeObject(forKey: Keys.widgetStatusPrefix + playlistID)
-        clearWidgetArtwork(for: playlistID)
+        clearResultArtwork(for: playlistID)
         persist()
+    }
+
+    func clearDuplicateWarning(for playlistID: String) {
+        defaults.removeObject(forKey: Keys.widgetDuplicateWarningPrefix + playlistID)
+        persist()
+    }
+
+    func clearAllWidgetState() {
+        var playlistIDs = Set(cachedPlaylists().map(\.id))
+        playlistIDs.insert(Self.unconfiguredWidgetStatusKey)
+        if let selected = selectedPlaylist {
+            playlistIDs.insert(selected.id)
+        }
+
+        for playlistID in playlistIDs {
+            clearWidgetStatus(for: playlistID)
+            clearNowPlayingCache(for: playlistID)
+            clearNowPlayingArtwork(for: playlistID)
+            clearDuplicateWarning(for: playlistID)
+        }
     }
 
     func duplicateWarning(for playlistID: String) -> WidgetDuplicateWarning? {
@@ -217,12 +238,6 @@ final class SharedStorage {
             return false
         }
         return date.timeIntervalSince(warning.shownAt) < Self.duplicateWarningDuration
-    }
-
-    func recordInPlaylistWarningIfNeeded(trackURI: String, for playlistID: String) {
-        if duplicateWarning(for: playlistID)?.trackURI != trackURI {
-            setDuplicateWarning(trackURI: trackURI, for: playlistID)
-        }
     }
 
     func nowPlayingCache(for playlistID: String) -> WidgetNowPlayingCache? {
@@ -257,34 +272,71 @@ final class SharedStorage {
         persist()
     }
 
-    func widgetArtworkURL(for playlistID: String) -> URL? {
-        guard let url = artworkFileURL(for: playlistID),
-              FileManager.default.fileExists(atPath: url.path) else {
-            return nil
-        }
-        return url
+    func resultArtworkData(for playlistID: String) -> Data? {
+        artworkData(
+            defaultsKey: Keys.widgetResultArtworkPrefix + playlistID,
+            fileName: "result_\(sanitizedFileComponent(playlistID)).jpg"
+        )
     }
 
-    func widgetArtworkData(for playlistID: String) -> Data? {
-        if let url = widgetArtworkURL(for: playlistID),
+    func nowPlayingArtworkData(for playlistID: String) -> Data? {
+        artworkData(
+            defaultsKey: Keys.widgetNowPlayingArtworkPrefix + playlistID,
+            fileName: "nowPlaying_\(sanitizedFileComponent(playlistID)).jpg"
+        )
+    }
+
+    @discardableResult
+    func saveResultArtwork(_ data: Data, for playlistID: String) -> Bool {
+        saveArtwork(
+            data,
+            defaultsKey: Keys.widgetResultArtworkPrefix + playlistID,
+            fileName: "result_\(sanitizedFileComponent(playlistID)).jpg"
+        )
+    }
+
+    @discardableResult
+    func saveNowPlayingArtwork(_ data: Data, for playlistID: String) -> Bool {
+        saveArtwork(
+            data,
+            defaultsKey: Keys.widgetNowPlayingArtworkPrefix + playlistID,
+            fileName: "nowPlaying_\(sanitizedFileComponent(playlistID)).jpg"
+        )
+    }
+
+    func clearResultArtwork(for playlistID: String) {
+        clearArtwork(
+            defaultsKey: Keys.widgetResultArtworkPrefix + playlistID,
+            fileName: "result_\(sanitizedFileComponent(playlistID)).jpg"
+        )
+    }
+
+    func clearNowPlayingArtwork(for playlistID: String) {
+        clearArtwork(
+            defaultsKey: Keys.widgetNowPlayingArtworkPrefix + playlistID,
+            fileName: "nowPlaying_\(sanitizedFileComponent(playlistID)).jpg"
+        )
+    }
+
+    private func artworkData(defaultsKey: String, fileName: String) -> Data? {
+        if let url = artworkFileURL(fileName: fileName),
            let data = try? Data(contentsOf: url),
            !data.isEmpty {
             return data
         }
 
-        guard let data = defaults.data(forKey: Keys.widgetArtworkDataPrefix + playlistID),
-              !data.isEmpty else {
+        guard let data = defaults.data(forKey: defaultsKey), !data.isEmpty else {
             return nil
         }
         return data
     }
 
     @discardableResult
-    func saveWidgetArtwork(_ data: Data, for playlistID: String) -> Bool {
-        defaults.set(data, forKey: Keys.widgetArtworkDataPrefix + playlistID)
+    private func saveArtwork(_ data: Data, defaultsKey: String, fileName: String) -> Bool {
+        defaults.set(data, forKey: defaultsKey)
         persist()
 
-        guard let fileURL = artworkFileURL(for: playlistID) else {
+        guard let fileURL = artworkFileURL(fileName: fileName) else {
             return true
         }
 
@@ -296,15 +348,15 @@ final class SharedStorage {
             try data.write(to: fileURL, options: .atomic)
             return true
         } catch {
-            return true
+            return false
         }
     }
 
-    func clearWidgetArtwork(for playlistID: String) {
-        defaults.removeObject(forKey: Keys.widgetArtworkDataPrefix + playlistID)
+    private func clearArtwork(defaultsKey: String, fileName: String) {
+        defaults.removeObject(forKey: defaultsKey)
         persist()
 
-        guard let url = artworkFileURL(for: playlistID),
+        guard let url = artworkFileURL(fileName: fileName),
               FileManager.default.fileExists(atPath: url.path) else {
             return
         }
@@ -316,7 +368,7 @@ final class SharedStorage {
             .appendingPathComponent("cachedPlaylists.json")
     }
 
-    private func artworkFileURL(for playlistID: String) -> URL? {
+    private func artworkFileURL(fileName: String) -> URL? {
         guard let container = FileManager.default.containerURL(
             forSecurityApplicationGroupIdentifier: suiteName
         ) else {
@@ -325,7 +377,7 @@ final class SharedStorage {
 
         return container
             .appendingPathComponent("WidgetArtwork", isDirectory: true)
-            .appendingPathComponent("\(sanitizedFileComponent(playlistID)).jpg")
+            .appendingPathComponent(fileName)
     }
 
     private func loadCachedPlaylists(from url: URL?) -> [CachedPlaylist] {
