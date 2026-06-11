@@ -18,6 +18,13 @@ struct PlaylistWidgetEntry: TimelineEntry {
     let nowPlayingArtworkData: Data?
     let nowPlayingTrackURI: String?
     let showInPlaylistWarning: Bool
+    let statusUpdatedAt: Date?
+}
+
+private enum LockScreenFeedback {
+    case added
+    case failed
+    case alreadyInPlaylist
 }
 
 struct AddCurrentSongWidgetView: View {
@@ -153,7 +160,7 @@ struct LockScreenInlineWidgetView: View {
                         Text(entry.inlineActionText)
                             .lineLimit(2)
                     } icon: {
-                        Image(systemName: entry.statusIsSuccess ? "checkmark.circle" : "music.note.list")
+                        Image(systemName: entry.lockScreenIconName)
                     }
                 }
                 .buttonStyle(.plain)
@@ -161,6 +168,7 @@ struct LockScreenInlineWidgetView: View {
                 Label("Choose playlist in app", systemImage: "exclamationmark.triangle")
             }
         }
+        .opacity(entry.lockScreenIsDimmed ? 0.4 : 1)
         .containerBackground(.clear, for: .widget)
     }
 }
@@ -172,7 +180,7 @@ struct LockScreenCircularWidgetView: View {
         Group {
             if let playlist = entry.playlistEntity {
                 Button(intent: AddCurrentSongIntent(playlist: playlist)) {
-                    Image(systemName: "plus")
+                    Image(systemName: entry.lockScreenCircularIconName)
                         .font(.title2.weight(.semibold))
                 }
                 .buttonStyle(.plain)
@@ -181,8 +189,9 @@ struct LockScreenCircularWidgetView: View {
                     .font(.title3.weight(.semibold))
             }
         }
+        .opacity(entry.lockScreenIsDimmed ? 0.35 : 1)
         .containerBackground(for: .widget) {
-            if entry.showsArtwork,
+            if entry.lockScreenShowsResultArtwork,
                let data = entry.artworkData,
                let uiImage = UIImage(data: data) {
                 Image(uiImage: uiImage)
@@ -203,7 +212,7 @@ struct LockScreenRectangularWidgetView: View {
             if let playlist = entry.playlistEntity {
                 Button(intent: AddCurrentSongIntent(playlist: playlist)) {
                     HStack(alignment: .top, spacing: 8) {
-                        if entry.showsArtwork {
+                        if entry.lockScreenShowsResultArtwork {
                             WidgetArtworkImage(
                                 artworkData: entry.artworkData,
                                 size: 44,
@@ -216,17 +225,33 @@ struct LockScreenRectangularWidgetView: View {
                                 .font(.headline)
                                 .lineLimit(1)
 
-                            if entry.hasTrackResult, let trackName = entry.trackName {
-                                Text(trackName)
+                            switch entry.lockScreenFeedback {
+                            case .added:
+                                Text("Added to playlist")
                                     .font(.caption.weight(.semibold))
-                                    .lineLimit(2)
-                                if let artistName = entry.artistName {
-                                    Text(artistName)
+                                    .lineLimit(1)
+                                if let trackName = entry.trackName {
+                                    Text(trackName)
                                         .font(.caption2)
                                         .foregroundStyle(.secondary)
-                                        .lineLimit(1)
+                                        .lineLimit(2)
                                 }
-                            } else {
+                            case .failed:
+                                Text(entry.shortLockScreenError)
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                    .lineLimit(2)
+                            case .alreadyInPlaylist:
+                                Text("Already in playlist")
+                                    .font(.caption.weight(.semibold))
+                                    .lineLimit(1)
+                                if let trackName = entry.trackName {
+                                    Text(trackName)
+                                        .font(.caption2)
+                                        .foregroundStyle(.secondary)
+                                        .lineLimit(2)
+                                }
+                            case nil:
                                 Text(entry.lockScreenSubtitle)
                                     .font(.caption)
                                     .lineLimit(2)
@@ -246,6 +271,7 @@ struct LockScreenRectangularWidgetView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
+        .opacity(entry.lockScreenIsDimmed ? 0.35 : 1)
         .containerBackground(for: .widget) {
             AccessoryWidgetBackground()
         }
@@ -286,6 +312,67 @@ private extension PlaylistWidgetEntry {
         hasTrackResult && artworkData != nil
     }
 
+    var lockScreenShowsResultArtwork: Bool {
+        lockScreenFeedback == .added && artworkData != nil
+    }
+
+    var lockScreenFeedback: LockScreenFeedback? {
+        guard statusMessage != nil,
+              let statusUpdatedAt,
+              date.timeIntervalSince(statusUpdatedAt) < SharedStorage.lockScreenFeedbackDuration else {
+            return nil
+        }
+
+        if statusIsSuccess && statusIsError {
+            return .alreadyInPlaylist
+        }
+        if statusIsError {
+            return .failed
+        }
+        if statusIsSuccess {
+            return .added
+        }
+        return nil
+    }
+
+    var lockScreenIsDimmed: Bool {
+        lockScreenFeedback == .failed
+    }
+
+    var lockScreenIconName: String {
+        switch lockScreenFeedback {
+        case .added:
+            return "checkmark.circle.fill"
+        case .failed:
+            return "xmark.circle"
+        case .alreadyInPlaylist:
+            return "exclamationmark.circle"
+        case nil:
+            return "music.note.list"
+        }
+    }
+
+    var lockScreenCircularIconName: String {
+        switch lockScreenFeedback {
+        case .added:
+            return "checkmark"
+        case .failed:
+            return "xmark"
+        case .alreadyInPlaylist:
+            return "exclamationmark"
+        case nil:
+            return "plus"
+        }
+    }
+
+    var shortLockScreenError: String {
+        let message = cleanStatusMessage
+        if message.count > 32 {
+            return String(message.prefix(29)) + "..."
+        }
+        return message
+    }
+
     var statusTextColor: Color {
         if cleanStatusMessage.localizedCaseInsensitiveContains("already in playlist") {
             return .orange
@@ -304,13 +391,19 @@ private extension PlaylistWidgetEntry {
     }
 
     var inlineActionText: String {
-        if statusIsSuccess, let trackName {
-            if let artistName {
-                return "\(trackName) · \(artistName)"
+        switch lockScreenFeedback {
+        case .added:
+            if let trackName {
+                return "Added · \(trackName)"
             }
-            return trackName
+            return "Added to playlist"
+        case .failed:
+            return shortLockScreenError
+        case .alreadyInPlaylist:
+            return "Already in playlist"
+        case nil:
+            return "Add to \(shortPlaylistName)"
         }
-        return "Add to \(shortPlaylistName)"
     }
 
     var shortPlaylistName: String {
@@ -368,7 +461,8 @@ struct PlaylistWidgetProvider: AppIntentTimelineProvider {
             nowPlayingArtistName: "Artist",
             nowPlayingArtworkData: nil,
             nowPlayingTrackURI: nil,
-            showInPlaylistWarning: false
+            showInPlaylistWarning: false,
+            statusUpdatedAt: nil
         )
     }
 
@@ -410,6 +504,22 @@ struct PlaylistWidgetProvider: AppIntentTimelineProvider {
                 )
             }
         }
+
+        if let status = widgetStatus(for: playlist) {
+            let feedbackEnd = status.updatedAt.addingTimeInterval(SharedStorage.lockScreenFeedbackDuration)
+            if feedbackEnd > now {
+                entries.append(
+                    makeEntry(
+                        for: configuration,
+                        nowPlaying: nowPlaying,
+                        showInPlaylistWarning: showWarning,
+                        date: feedbackEnd
+                    )
+                )
+            }
+        }
+
+        entries.sort { $0.date < $1.date }
 
         let refreshDate = now.addingTimeInterval(SharedStorage.nowPlayingRefreshInterval)
         return Timeline(entries: entries, policy: .after(refreshDate))
@@ -457,7 +567,8 @@ struct PlaylistWidgetProvider: AppIntentTimelineProvider {
             nowPlayingArtistName: nowPlaying?.artistName,
             nowPlayingArtworkData: nowPlaying?.artworkData,
             nowPlayingTrackURI: nowPlaying?.trackURI,
-            showInPlaylistWarning: showInPlaylistWarning
+            showInPlaylistWarning: showInPlaylistWarning,
+            statusUpdatedAt: status?.updatedAt
         )
     }
 

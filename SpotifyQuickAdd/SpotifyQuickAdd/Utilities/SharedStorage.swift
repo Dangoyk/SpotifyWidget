@@ -62,6 +62,7 @@ final class SharedStorage {
     }
 
     static let duplicateWarningDuration: TimeInterval = 8
+    static let lockScreenFeedbackDuration: TimeInterval = 8
     static let nowPlayingRefreshInterval: TimeInterval = 30
 
     private let defaults: UserDefaults
