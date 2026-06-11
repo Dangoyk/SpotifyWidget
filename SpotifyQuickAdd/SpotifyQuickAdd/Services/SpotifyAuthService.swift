@@ -2,24 +2,26 @@ import AuthenticationServices
 import Foundation
 
 @MainActor
-final class SpotifyAuthService: NSObject, ObservableObject {
+final class SpotifyAuthService: NSObject, ObservableObject, SpotifyTokenProviding {
     @Published private(set) var isLoggedIn = false
 
-    private let keychain: KeychainManager
+    private let tokenProvider: SpotifyTokenProvider
     private let presentationProvider = WebAuthPresentationContextProvider()
     private var authSession: ASWebAuthenticationSession?
     private var pendingCodeVerifier: String?
+    private var callbackExchangeTask: Task<Void, Error>?
 
     private let codeVerifierDefaultsKey = "spotify.pkce.codeVerifier"
 
-    init(keychain: KeychainManager = KeychainManager()) {
-        self.keychain = keychain
+    init(tokenProvider: SpotifyTokenProvider = SpotifyTokenProvider()) {
+        self.tokenProvider = tokenProvider
         super.init()
         refreshLoginState()
     }
 
     func refreshLoginState() {
-        isLoggedIn = (try? keychain.read(.refreshToken)) != nil
+        tokenProvider.refreshLoginState()
+        isLoggedIn = tokenProvider.isLoggedIn
     }
 
     func startLogin() async throws {
@@ -50,6 +52,19 @@ final class SpotifyAuthService: NSObject, ObservableObject {
         let callbackScheme = SpotifyConfig.urlScheme
 
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            var didResume = false
+
+            func resumeOnce(with result: Result<Void, Error>) {
+                guard !didResume else { return }
+                didResume = true
+                switch result {
+                case .success:
+                    continuation.resume()
+                case .failure(let error):
+                    continuation.resume(throwing: error)
+                }
+            }
+
             let session = ASWebAuthenticationSession(
                 url: authURL,
                 callbackURLScheme: callbackScheme
@@ -57,28 +72,28 @@ final class SpotifyAuthService: NSObject, ObservableObject {
                 Task { @MainActor in
                     if let error {
                         if (error as NSError).code == ASWebAuthenticationSessionError.canceledLogin.rawValue {
-                            continuation.resume(throwing: AppError.unknown("Spotify login was cancelled."))
+                            resumeOnce(with: .failure(AppError.unknown("Spotify login was cancelled.")))
                         } else {
-                            continuation.resume(throwing: AppError.networkFailure(error.localizedDescription))
+                            resumeOnce(with: .failure(AppError.networkFailure(error.localizedDescription)))
                         }
                         return
                     }
 
                     guard let callbackURL else {
-                        continuation.resume(throwing: AppError.unknown("Spotify login did not return a callback URL."))
+                        resumeOnce(with: .failure(AppError.unknown("Spotify login did not return a callback URL.")))
                         return
                     }
 
                     guard let self else {
-                        continuation.resume(throwing: AppError.unknown("Spotify login session ended unexpectedly."))
+                        resumeOnce(with: .failure(AppError.unknown("Spotify login session ended unexpectedly.")))
                         return
                     }
 
                     do {
                         try await self.handleCallback(url: callbackURL)
-                        continuation.resume()
+                        resumeOnce(with: .success(()))
                     } catch {
-                        continuation.resume(throwing: error)
+                        resumeOnce(with: .failure(error))
                     }
                 }
             }
@@ -88,12 +103,33 @@ final class SpotifyAuthService: NSObject, ObservableObject {
             self.authSession = session
 
             if !session.start() {
-                continuation.resume(throwing: AppError.unknown("Could not start Spotify login session."))
+                resumeOnce(with: .failure(AppError.unknown("Could not start Spotify login session.")))
             }
         }
     }
 
     func handleCallback(url: URL) async throws {
+        if let callbackExchangeTask {
+            return try await callbackExchangeTask.value
+        }
+
+        if isLoggedIn,
+           pendingCodeVerifier == nil,
+           let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+           components.queryItems?.contains(where: { $0.name == "code" }) == true {
+            return
+        }
+
+        let task = Task { @MainActor in
+            try await self.exchangeAuthorizationCode(from: url)
+        }
+        callbackExchangeTask = task
+        defer { callbackExchangeTask = nil }
+
+        return try await task.value
+    }
+
+    private func exchangeAuthorizationCode(from url: URL) async throws {
         guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
             throw AppError.unknown("Invalid Spotify callback URL.")
         }
@@ -111,113 +147,24 @@ final class SpotifyAuthService: NSObject, ObservableObject {
             throw AppError.unknown("Missing PKCE code verifier. Please try signing in again.")
         }
 
-        try await exchangeCodeForTokens(code: code, verifier: verifier)
+        try await tokenProvider.exchangeCodeForTokens(code: code, verifier: verifier)
         pendingCodeVerifier = nil
         UserDefaults.standard.removeObject(forKey: codeVerifierDefaultsKey)
         refreshLoginState()
     }
 
     func logout() {
-        keychain.clearAll()
+        tokenProvider.clearTokens()
         pendingCodeVerifier = nil
         UserDefaults.standard.removeObject(forKey: codeVerifierDefaultsKey)
         refreshLoginState()
     }
 
     func validAccessToken() async throws -> String {
-        if let expirationString = try keychain.read(.expirationDate),
-           let expiration = ISO8601DateFormatter().date(from: expirationString),
-           expiration.timeIntervalSinceNow > 60,
-           let accessToken = try keychain.read(.accessToken) {
-            return accessToken
-        }
-
-        return try await refreshAccessToken()
+        try await tokenProvider.validAccessToken()
     }
 
-    private func exchangeCodeForTokens(code: String, verifier: String) async throws {
-        let bodyItems = [
-            URLQueryItem(name: "grant_type", value: "authorization_code"),
-            URLQueryItem(name: "code", value: code),
-            URLQueryItem(name: "redirect_uri", value: SpotifyConfig.redirectURI),
-            URLQueryItem(name: "client_id", value: SpotifyConfig.clientID),
-            URLQueryItem(name: "code_verifier", value: verifier)
-        ]
-
-        let response: TokenResponse = try await performTokenRequest(bodyItems: bodyItems)
-        try storeTokens(from: response)
-    }
-
-    private func refreshAccessToken() async throws -> String {
-        guard let refreshToken = try keychain.read(.refreshToken) else {
-            refreshLoginState()
-            throw AppError.loginRequired
-        }
-
-        let bodyItems = [
-            URLQueryItem(name: "grant_type", value: "refresh_token"),
-            URLQueryItem(name: "refresh_token", value: refreshToken),
-            URLQueryItem(name: "client_id", value: SpotifyConfig.clientID)
-        ]
-
-        let response: TokenResponse = try await performTokenRequest(bodyItems: bodyItems)
-        try storeTokens(from: response, existingRefreshToken: refreshToken)
-
-        guard let accessToken = try keychain.read(.accessToken) else {
-            throw AppError.loginRequired
-        }
-
-        return accessToken
-    }
-
-    private func performTokenRequest(bodyItems: [URLQueryItem]) async throws -> TokenResponse {
-        var request = URLRequest(url: SpotifyConfig.tokenURL)
-        request.httpMethod = "POST"
-        request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
-
-        var components = URLComponents()
-        components.queryItems = bodyItems
-        request.httpBody = components.percentEncodedQuery?.data(using: .utf8)
-
-        let (data, response) = try await URLSession.shared.data(for: request)
-
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw AppError.networkFailure("Spotify token request failed.")
-        }
-
-        guard (200...299).contains(httpResponse.statusCode) else {
-            let message = Self.spotifyErrorMessage(from: data) ?? "Spotify token request failed with status \(httpResponse.statusCode)."
-            if httpResponse.statusCode == 401 {
-                keychain.clearAll()
-                refreshLoginState()
-                throw AppError.loginRequired
-            }
-            throw AppError.networkFailure(message)
-        }
-
-        do {
-            return try JSONDecoder().decode(TokenResponse.self, from: data)
-        } catch {
-            throw AppError.networkFailure("Could not parse Spotify token response.")
-        }
-    }
-
-    private func storeTokens(from response: TokenResponse, existingRefreshToken: String? = nil) throws {
-        try keychain.save(response.accessToken, for: .accessToken)
-
-        if let refreshToken = response.refreshToken ?? existingRefreshToken {
-            try keychain.save(refreshToken, for: .refreshToken)
-        }
-
-        let expiration = Date().addingTimeInterval(TimeInterval(response.expiresIn))
-        let expirationString = ISO8601DateFormatter().string(from: expiration)
-        try keychain.save(expirationString, for: .expirationDate)
-    }
-
-    private static func spotifyErrorMessage(from data: Data) -> String? {
-        guard let decoded = try? JSONDecoder().decode(SpotifyAPIErrorResponse.self, from: data) else {
-            return String(data: data, encoding: .utf8)
-        }
-        return decoded.error?.message
+    func forceRefreshAccessToken() async throws -> String {
+        try await tokenProvider.forceRefreshAccessToken()
     }
 }

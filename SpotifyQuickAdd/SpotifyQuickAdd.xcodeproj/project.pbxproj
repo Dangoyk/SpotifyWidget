@@ -16,7 +16,6 @@
 		B10000000000000000000007 /* SpotifyAPIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000007 /* SpotifyAPIService.swift */; };
 		B10000000000000000000008 /* PlaylistManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000008 /* PlaylistManager.swift */; };
 		B10000000000000000000009 /* SettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000009 /* SettingsViewModel.swift */; };
-		B10000000000000000000010 /* AddSongViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000010 /* AddSongViewModel.swift */; };
 		B10000000000000000000011 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000011 /* ContentView.swift */; };
 		B10000000000000000000012 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000012 /* SettingsView.swift */; };
 		B10000000000000000000013 /* PlaylistPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000013 /* PlaylistPickerView.swift */; };
@@ -26,9 +25,23 @@
 		B10000000000000000000017 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000017 /* Assets.xcassets */; };
 		B10000000000000000000018 /* SpotifyQuickAddWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000018 /* SpotifyQuickAddWidgetBundle.swift */; };
 		B10000000000000000000019 /* SpotifyQuickAddWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000019 /* SpotifyQuickAddWidget.swift */; };
-		B10000000000000000000020 /* SpotifyConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000020 /* SpotifyConfig.swift */; };
 		B10000000000000000000021 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000021 /* Assets.xcassets */; };
 		B10000000000000000000022 /* SpotifyQuickAddWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = P1000000000000000000000003 /* SpotifyQuickAddWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		B10000000000000000000023 /* SpotifyTokenProviding.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000026 /* SpotifyTokenProviding.swift */; };
+		B10000000000000000000024 /* SpotifyTokenProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000027 /* SpotifyTokenProvider.swift */; };
+		B10000000000000000000025 /* SpotifyConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000002 /* SpotifyConfig.swift */; };
+		B10000000000000000000026 /* AppError.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000003 /* AppError.swift */; };
+		B10000000000000000000027 /* SpotifyModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000004 /* SpotifyModels.swift */; };
+		B10000000000000000000028 /* KeychainManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000005 /* KeychainManager.swift */; };
+		B10000000000000000000029 /* SpotifyAPIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000007 /* SpotifyAPIService.swift */; };
+		B10000000000000000000030 /* PlaylistManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000008 /* PlaylistManager.swift */; };
+		B10000000000000000000031 /* SharedStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000015 /* SharedStorage.swift */; };
+		B10000000000000000000032 /* SpotifyTokenProviding.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000026 /* SpotifyTokenProviding.swift */; };
+		B10000000000000000000033 /* SpotifyTokenProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000027 /* SpotifyTokenProvider.swift */; };
+		B10000000000000000000034 /* PlaylistEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000028 /* PlaylistEntity.swift */; };
+		B10000000000000000000035 /* ConfigurePlaylistWidgetIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000029 /* ConfigurePlaylistWidgetIntent.swift */; };
+		B10000000000000000000036 /* AddCurrentSongIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000030 /* AddCurrentSongIntent.swift */; };
+		B10000000000000000000037 /* WidgetAddSongLock.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000031 /* WidgetAddSongLock.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -65,7 +78,6 @@
 		F10000000000000000000007 /* SpotifyAPIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpotifyAPIService.swift; sourceTree = "<group>"; };
 		F10000000000000000000008 /* PlaylistManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaylistManager.swift; sourceTree = "<group>"; };
 		F10000000000000000000009 /* SettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewModel.swift; sourceTree = "<group>"; };
-		F10000000000000000000010 /* AddSongViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddSongViewModel.swift; sourceTree = "<group>"; };
 		F10000000000000000000011 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		F10000000000000000000012 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		F10000000000000000000013 /* PlaylistPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaylistPickerView.swift; sourceTree = "<group>"; };
@@ -75,8 +87,13 @@
 		F10000000000000000000017 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		F10000000000000000000018 /* SpotifyQuickAddWidgetBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpotifyQuickAddWidgetBundle.swift; sourceTree = "<group>"; };
 		F10000000000000000000019 /* SpotifyQuickAddWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpotifyQuickAddWidget.swift; sourceTree = "<group>"; };
-		F10000000000000000000020 /* SpotifyConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpotifyConfig.swift; sourceTree = "<group>"; };
 		F10000000000000000000021 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		F10000000000000000000026 /* SpotifyTokenProviding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpotifyTokenProviding.swift; sourceTree = "<group>"; };
+		F10000000000000000000027 /* SpotifyTokenProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpotifyTokenProvider.swift; sourceTree = "<group>"; };
+		F10000000000000000000028 /* PlaylistEntity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaylistEntity.swift; sourceTree = "<group>"; };
+		F10000000000000000000029 /* ConfigurePlaylistWidgetIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigurePlaylistWidgetIntent.swift; sourceTree = "<group>"; };
+		F10000000000000000000030 /* AddCurrentSongIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddCurrentSongIntent.swift; sourceTree = "<group>"; };
+		F10000000000000000000031 /* WidgetAddSongLock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetAddSongLock.swift; sourceTree = "<group>"; };
 		F10000000000000000000022 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		F10000000000000000000023 /* SpotifyQuickAdd.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SpotifyQuickAdd.entitlements; sourceTree = "<group>"; };
 		F10000000000000000000024 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -134,12 +151,23 @@
 			children = (
 				F10000000000000000000018 /* SpotifyQuickAddWidgetBundle.swift */,
 				F10000000000000000000019 /* SpotifyQuickAddWidget.swift */,
-				F10000000000000000000020 /* SpotifyConfig.swift */,
+				G10000000000000000000011 /* Intents */,
 				F10000000000000000000021 /* Assets.xcassets */,
 				F10000000000000000000024 /* Info.plist */,
 				F10000000000000000000025 /* SpotifyQuickAddWidget.entitlements */,
 			);
 			path = SpotifyQuickAddWidget;
+			sourceTree = "<group>";
+		};
+		G10000000000000000000011 /* Intents */ = {
+			isa = PBXGroup;
+			children = (
+				F10000000000000000000028 /* PlaylistEntity.swift */,
+				F10000000000000000000029 /* ConfigurePlaylistWidgetIntent.swift */,
+				F10000000000000000000030 /* AddCurrentSongIntent.swift */,
+				F10000000000000000000031 /* WidgetAddSongLock.swift */,
+			);
+			path = Intents;
 			sourceTree = "<group>";
 		};
 		G10000000000000000000004 /* Products */ = {
@@ -172,6 +200,8 @@
 			isa = PBXGroup;
 			children = (
 				F10000000000000000000005 /* KeychainManager.swift */,
+				F10000000000000000000026 /* SpotifyTokenProviding.swift */,
+				F10000000000000000000027 /* SpotifyTokenProvider.swift */,
 				F10000000000000000000006 /* SpotifyAuthService.swift */,
 				F10000000000000000000007 /* SpotifyAPIService.swift */,
 				F10000000000000000000008 /* PlaylistManager.swift */,
@@ -183,7 +213,6 @@
 			isa = PBXGroup;
 			children = (
 				F10000000000000000000009 /* SettingsViewModel.swift */,
-				F10000000000000000000010 /* AddSongViewModel.swift */,
 			);
 			path = ViewModels;
 			sourceTree = "<group>";
@@ -317,13 +346,14 @@
 				B10000000000000000000007 /* SpotifyAPIService.swift in Sources */,
 				B10000000000000000000008 /* PlaylistManager.swift in Sources */,
 				B10000000000000000000009 /* SettingsViewModel.swift in Sources */,
-				B10000000000000000000010 /* AddSongViewModel.swift in Sources */,
 				B10000000000000000000011 /* ContentView.swift in Sources */,
 				B10000000000000000000012 /* SettingsView.swift in Sources */,
 				B10000000000000000000013 /* PlaylistPickerView.swift in Sources */,
 				B10000000000000000000014 /* PKCEHelper.swift in Sources */,
 				B10000000000000000000015 /* SharedStorage.swift in Sources */,
 				B10000000000000000000016 /* WebAuthPresentationContextProvider.swift in Sources */,
+				B10000000000000000000023 /* SpotifyTokenProviding.swift in Sources */,
+				B10000000000000000000024 /* SpotifyTokenProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -333,7 +363,19 @@
 			files = (
 				B10000000000000000000018 /* SpotifyQuickAddWidgetBundle.swift in Sources */,
 				B10000000000000000000019 /* SpotifyQuickAddWidget.swift in Sources */,
-				B10000000000000000000020 /* SpotifyConfig.swift in Sources */,
+				B10000000000000000000025 /* SpotifyConfig.swift in Sources */,
+				B10000000000000000000026 /* AppError.swift in Sources */,
+				B10000000000000000000027 /* SpotifyModels.swift in Sources */,
+				B10000000000000000000028 /* KeychainManager.swift in Sources */,
+				B10000000000000000000029 /* SpotifyAPIService.swift in Sources */,
+				B10000000000000000000030 /* PlaylistManager.swift in Sources */,
+				B10000000000000000000031 /* SharedStorage.swift in Sources */,
+				B10000000000000000000032 /* SpotifyTokenProviding.swift in Sources */,
+				B10000000000000000000033 /* SpotifyTokenProvider.swift in Sources */,
+				B10000000000000000000034 /* PlaylistEntity.swift in Sources */,
+				B10000000000000000000035 /* ConfigurePlaylistWidgetIntent.swift in Sources */,
+				B10000000000000000000036 /* AddCurrentSongIntent.swift in Sources */,
+				B10000000000000000000037 /* WidgetAddSongLock.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

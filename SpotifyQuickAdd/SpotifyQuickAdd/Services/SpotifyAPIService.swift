@@ -1,12 +1,11 @@
 import Foundation
 
-@MainActor
 final class SpotifyAPIService {
-    private let authService: SpotifyAuthService
+    private let tokenProvider: SpotifyTokenProviding
     private let session: URLSession
 
-    init(authService: SpotifyAuthService, session: URLSession = .shared) {
-        self.authService = authService
+    init(tokenProvider: SpotifyTokenProviding, session: URLSession = .shared) {
+        self.tokenProvider = tokenProvider
         self.session = session
     }
 
@@ -18,7 +17,7 @@ final class SpotifyAPIService {
             throw AppError.networkFailure("Could not read currently playing track.")
         }
 
-        if httpResponse.statusCode == 204 {
+        if httpResponse.statusCode == 204 || data.isEmpty {
             throw AppError.nothingPlaying
         }
 
@@ -197,8 +196,34 @@ final class SpotifyAPIService {
     }
 
     private func authorizedRequest(url: URL, method: String, body: Data? = nil) async throws -> (Data, URLResponse) {
-        let accessToken = try await authService.validAccessToken()
+        let accessToken = try await tokenProvider.validAccessToken()
+        let firstAttempt = try await performAuthorizedRequest(
+            url: url,
+            method: method,
+            body: body,
+            accessToken: accessToken
+        )
 
+        if let httpResponse = firstAttempt.1 as? HTTPURLResponse,
+           httpResponse.statusCode == 401 {
+            let refreshedToken = try await tokenProvider.forceRefreshAccessToken()
+            return try await performAuthorizedRequest(
+                url: url,
+                method: method,
+                body: body,
+                accessToken: refreshedToken
+            )
+        }
+
+        return firstAttempt
+    }
+
+    private func performAuthorizedRequest(
+        url: URL,
+        method: String,
+        body: Data?,
+        accessToken: String
+    ) async throws -> (Data, URLResponse) {
         var request = URLRequest(url: url)
         request.httpMethod = method
         request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
@@ -221,9 +246,6 @@ final class SpotifyAPIService {
         }
 
         if statusCode == 403 {
-            if let message = Self.spotifyErrorMessage(from: data), !message.isEmpty {
-                return .networkFailure(message)
-            }
             return .permissionDenied
         }
 

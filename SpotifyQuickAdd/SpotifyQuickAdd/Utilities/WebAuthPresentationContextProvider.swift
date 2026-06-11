@@ -2,6 +2,7 @@ import AuthenticationServices
 import Foundation
 import UIKit
 
+@MainActor
 final class WebAuthPresentationContextProvider: NSObject, ASWebAuthenticationPresentationContextProviding {
     func presentationAnchor(for session: ASWebAuthenticationSession) -> ASPresentationAnchor {
         let scenes = UIApplication.shared.connectedScenes

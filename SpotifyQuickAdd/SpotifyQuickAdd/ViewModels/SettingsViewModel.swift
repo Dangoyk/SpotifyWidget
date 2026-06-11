@@ -34,21 +34,28 @@ final class SettingsViewModel: ObservableObject {
         selectedPlaylist = storage.selectedPlaylist
     }
 
-    func handleOAuthCallback(url: URL) async {
-        isLoading = true
-        clearStatus()
+    func handleIncomingURL(_ url: URL) async {
+        guard url.scheme == SpotifyConfig.urlScheme else { return }
 
-        do {
-            try await authService.handleCallback(url: url)
-            isLoggedIn = authService.isLoggedIn
-            showSuccess("Signed in to Spotify.")
-        } catch let error as AppError {
-            showError(error)
-        } catch {
-            showError(.networkFailure(error.localizedDescription))
+        switch url.host {
+        case "callback":
+            let wasLoggedIn = isLoggedIn
+            do {
+                try await authService.handleCallback(url: url)
+                isLoggedIn = authService.isLoggedIn
+
+                guard !wasLoggedIn, isLoggedIn else { return }
+
+                showSuccess("Signed in to Spotify.")
+                await fetchPlaylists(preserveStatusMessage: true)
+            } catch let error as AppError {
+                showError(error)
+            } catch {
+                showError(.networkFailure(error.localizedDescription))
+            }
+        default:
+            break
         }
-
-        isLoading = false
     }
 
     func login() async {
@@ -59,6 +66,7 @@ final class SettingsViewModel: ObservableObject {
             try await authService.startLogin()
             isLoggedIn = authService.isLoggedIn
             showSuccess("Signed in to Spotify.")
+            await fetchPlaylists(preserveStatusMessage: true)
         } catch let error as AppError {
             showError(error)
         } catch {
@@ -73,21 +81,25 @@ final class SettingsViewModel: ObservableObject {
         playlists = []
         selectedPlaylist = nil
         storage.selectedPlaylist = nil
+        storage.clearCachedPlaylists()
         isLoggedIn = false
         showSuccess("Signed out of Spotify.")
     }
 
-    func fetchPlaylists() async {
+    func fetchPlaylists(preserveStatusMessage: Bool = false) async {
         guard isLoggedIn else {
             showError(.loginRequired)
             return
         }
 
         isLoading = true
-        clearStatus()
+        if !preserveStatusMessage {
+            clearStatus()
+        }
 
         do {
             playlists = try await apiService.fetchEditablePlaylists()
+            storage.cachePlaylists(playlists)
 
             if let selected = selectedPlaylist,
                !playlists.contains(where: { $0.id == selected.id }) {
@@ -101,9 +113,17 @@ final class SettingsViewModel: ObservableObject {
                 showSuccess("Loaded \(playlists.count) editable playlist(s).")
             }
         } catch let error as AppError {
-            showError(error)
+            if preserveStatusMessage {
+                showError(.unknown("Signed in, but could not load playlists. \(error.errorDescription ?? "Try Fetch Playlists again.")"))
+            } else {
+                showError(error)
+            }
         } catch {
-            showError(.networkFailure(error.localizedDescription))
+            if preserveStatusMessage {
+                showError(.unknown("Signed in, but could not load playlists. \(error.localizedDescription)"))
+            } else {
+                showError(.networkFailure(error.localizedDescription))
+            }
         }
 
         isLoading = false

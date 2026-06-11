@@ -1,28 +1,35 @@
 import Foundation
 
-@MainActor
 final class PlaylistManager {
-    private let authService: SpotifyAuthService
+    private let tokenProvider: SpotifyTokenProviding
     private let apiService: SpotifyAPIService
     private let storage: SharedStorage
+    private let isWidgetContext: Bool
 
     init(
-        authService: SpotifyAuthService,
+        tokenProvider: SpotifyTokenProviding,
         apiService: SpotifyAPIService,
-        storage: SharedStorage = .shared
+        storage: SharedStorage = .shared,
+        isWidgetContext: Bool = false
     ) {
-        self.authService = authService
+        self.tokenProvider = tokenProvider
         self.apiService = apiService
         self.storage = storage
+        self.isWidgetContext = isWidgetContext
     }
 
     func addCurrentTrackToSelectedPlaylist() async -> Result<String, AppError> {
-        guard authService.isLoggedIn else {
-            return .failure(.loginRequired)
-        }
-
         guard let selectedPlaylist = storage.selectedPlaylist else {
             return .failure(.noPlaylistSelected)
+        }
+        return await addCurrentTrack(to: selectedPlaylist)
+    }
+
+    func addCurrentTrack(to playlist: SelectedPlaylist) async -> Result<String, AppError> {
+        tokenProvider.refreshLoginState()
+
+        guard tokenProvider.isLoggedIn else {
+            return .failure(isWidgetContext ? .widgetLoginRequired : .loginRequired)
         }
 
         do {
@@ -33,7 +40,7 @@ final class PlaylistManager {
             }
 
             let alreadyExists = try await apiService.playlistContainsTrack(
-                playlistId: selectedPlaylist.id,
+                playlistId: playlist.id,
                 trackURI: trackURI
             )
 
@@ -42,17 +49,26 @@ final class PlaylistManager {
             }
 
             try await apiService.addTrackToPlaylist(
-                playlistId: selectedPlaylist.id,
+                playlistId: playlist.id,
                 trackURI: trackURI
             )
 
             let trackName = track.name ?? "Track"
-            let message = "Added \"\(trackName)\" to \"\(selectedPlaylist.name)\"."
+            let message = isWidgetContext
+                ? "Added: \(trackName)"
+                : "Added \"\(trackName)\" to \"\(playlist.name)\"."
             return .success(message)
         } catch let error as AppError {
-            return .failure(error)
+            return .failure(mapErrorForContext(error))
         } catch {
             return .failure(.networkFailure(error.localizedDescription))
         }
+    }
+
+    private func mapErrorForContext(_ error: AppError) -> AppError {
+        if isWidgetContext, error == .loginRequired {
+            return .widgetLoginRequired
+        }
+        return error
     }
 }

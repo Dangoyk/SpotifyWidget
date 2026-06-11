@@ -6,6 +6,12 @@ struct SettingsView: View {
     var body: some View {
         Form {
             Section("Spotify Account") {
+                if !SharedStorage.shared.isAppGroupAvailable {
+                    Text("App Group is not configured. Widgets will not work until App Groups are enabled on both targets.")
+                        .font(.footnote)
+                        .foregroundStyle(.red)
+                }
+
                 HStack {
                     Text("Status")
                     Spacer()
@@ -26,7 +32,7 @@ struct SettingsView: View {
             }
 
             Section("Playlist") {
-                Text("Only playlists you own are shown. Followed playlists and Spotify mixes cannot be edited.")
+                Text("Fetch playlists here first so they appear when configuring Home Screen widgets. Only playlists you own are shown.")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
 
@@ -52,8 +58,14 @@ struct SettingsView: View {
                 }
             }
 
+            Section("Home Screen Widgets (A+)") {
+                Text("After fetching playlists, add widgets from the Home Screen gallery. Configure each widget with a different playlist (Favorites, Gym, etc.).")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
+
             Section("Test Workflow") {
-                Text("Use this to test the same flow triggered by the Home Screen widget.")
+                Text("Test adding to the playlist selected above (app settings). Widgets use their own configured playlist.")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
 
@@ -78,8 +90,8 @@ struct SettingsView: View {
 
 #Preview {
     let auth = SpotifyAuthService()
-    let api = SpotifyAPIService(authService: auth)
-    let manager = PlaylistManager(authService: auth, apiService: api)
+    let api = SpotifyAPIService(tokenProvider: auth)
+    let manager = PlaylistManager(tokenProvider: auth, apiService: api)
 
     return NavigationStack {
         SettingsView(

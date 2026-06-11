@@ -6,5 +6,9 @@
 	<array>
 		<string>group.com.yourname.spotifyquickadd</string>
 	</array>
+	<key>keychain-access-groups</key>
+	<array>
+		<string>$(AppIdentifierPrefix)com.yourname.spotifyquickadd</string>
+	</array>
 </dict>
 </plist>

@@ -1,6 +1,13 @@
-# Spotify Quick Add
+# Spotify Quick Add (A+)
 
-An iPhone app with a Home Screen widget that adds your currently playing Spotify track to a playlist you choose.
+An iPhone app with **configurable Home Screen widgets**. Each widget is assigned to one Spotify playlist when you add it from the widget gallery.
+
+**Example:**
+- Widget 1 → Favorites
+- Widget 2 → Gym
+- Widget 3 → Road Trip
+
+Tap a widget's **Add Current Song** button to add whatever is currently playing in Spotify to **that widget's playlist** — no playlist picker each time.
 
 ## What you need
 
@@ -139,31 +146,99 @@ Run the app again from Xcode.
 
 ---
 
-## Part 4: First-Time App Setup
+## Part 4: Manual Xcode Checklist (A+)
 
-1. Open **Spotify Quick Add** on your iPhone
-2. Tap **Sign In with Spotify** and approve permissions
-3. Tap **Fetch Playlists**
-4. Select the playlist you want songs added to
-5. Tap **Test Add Current Song** to verify (play something in Spotify first)
+Do these steps yourself in Xcode before building:
+
+### 1. Widget Extension target
+
+The project already includes **SpotifyQuickAddWidgetExtension**. Confirm it appears under **TARGETS** in the project navigator.
+
+### 2. App Groups (both targets)
+
+For **SpotifyQuickAdd** and **SpotifyQuickAddWidgetExtension**:
+
+1. Select the target → **Signing & Capabilities**
+2. Confirm **App Groups** is enabled
+3. Confirm this group is checked:
+   ```
+   group.com.yourname.spotifyquickadd
+   ```
+4. Use the **same** App Group ID in:
+   - `SpotifyQuickAdd/SpotifyQuickAdd.entitlements`
+   - `SpotifyQuickAddWidget/SpotifyQuickAddWidget.entitlements`
+   - `SpotifyQuickAdd/Config/SpotifyConfig.swift` → `appGroupIdentifier`
+
+Replace `com.yourname` with your own identifier everywhere.
+
+### 3. Keychain sharing (both targets)
+
+Both entitlements files include **Keychain Sharing** via `keychain-access-groups`. This lets the widget read Spotify tokens saved by the main app. No extra step needed if entitlements match.
+
+If the widget says login is required even after signing in, set your Apple Team ID in `SpotifyConfig.swift`:
+
+```swift
+static let appleTeamID: String? = "YOUR10CHARTEAMID"
+```
+
+Find it in Xcode under **Signing & Capabilities** → **Team**, or at [developer.apple.com/account](https://developer.apple.com/account).
+
+### 4. URL scheme (main app only)
+
+Confirm **SpotifyQuickAdd** target → **Info** → **URL Types** → URL Schemes:
+
+```
+spotifyquickadd
+```
+
+### 5. Spotify redirect URI
+
+In Spotify Developer Dashboard, confirm:
+
+```
+spotifyquickadd://callback
+```
+
+### 6. Build to physical iPhone
+
+Select your iPhone as run destination → **Run** (`Cmd+R`).
 
 ---
 
-## Part 5: Add the Home Screen Widget
+## Part 5: First-Time App Setup
 
-1. Long-press your iPhone Home Screen
-2. Tap **+** (top left)
-3. Search for **Spotify Quick Add**
-4. Choose a widget size and tap **Add Widget**
-5. Tap the widget's **Add Current Song** button
+1. Open **Spotify Quick Add** on your iPhone
+2. Tap **Sign In with Spotify** and approve permissions
+3. Tap **Fetch Playlists** (required — caches playlists for widget configuration)
+4. Optionally select a playlist and tap **Test Add Current Song** to verify in the app
 
-The widget opens the app, which:
+---
 
-1. Reads your selected playlist
-2. Fetches your currently playing track
-3. Checks if the song is already in the playlist (paginated search)
-4. Adds it if not already present
-5. Shows a success or error message
+## Part 6: Add and Configure Home Screen Widgets (A+)
+
+You can add **multiple widgets**, each with a **different playlist**:
+
+1. Long-press the Home Screen → tap **+**
+2. Search **Spotify Quick Add**
+3. Pick a widget size → **Add Widget**
+4. When prompted, **choose a playlist** (e.g. Favorites)
+5. Tap **Done**
+6. Repeat to add more widgets with different playlists (Gym, Road Trip, etc.)
+
+### Using a widget
+
+1. Play a song in the **Spotify** app
+2. Tap **Add Current Song** on the widget
+3. The widget shows a result, for example:
+   - ✅ Added: Song Name
+   - ❌ Nothing is currently playing.
+   - ❌ Spotify login required. Open the app to sign in.
+   - ❌ Please configure this widget with a playlist.
+   - ❌ This song is already in that playlist.
+
+### Reconfigure a widget
+
+Long-press the widget → **Edit Widget** → change the playlist.
 
 ---
 
@@ -171,12 +246,15 @@ The widget opens the app, which:
 
 | Component | Role |
 |-----------|------|
-| `SpotifyAuthService` | OAuth PKCE login, token refresh, Keychain storage |
+| `SpotifyAuthService` | OAuth PKCE login UI |
+| `SpotifyTokenProvider` | Shared token refresh + Keychain |
 | `SpotifyAPIService` | Spotify Web API calls |
 | `PlaylistManager` | Add-song workflow and duplicate detection |
-| `KeychainManager` | Secure token storage |
-| `SharedStorage` | App Group storage for selected playlist |
-| `SettingsViewModel` / `AddSongViewModel` | MVVM UI logic |
+| `KeychainManager` | Secure token storage (shared via Keychain groups) |
+| `SharedStorage` | App Group: cached playlists, widget status |
+| `ConfigurePlaylistWidgetIntent` | Per-widget playlist configuration |
+| `AddCurrentSongIntent` | Widget button: add song to configured playlist |
+| `SettingsViewModel` | MVVM app UI logic |
 
 ## Spotify API scopes used
 
@@ -202,7 +280,9 @@ If your Spotify app is in **Development Mode**:
 | "INVALID_CLIENT" | Client ID typo or redirect URI mismatch |
 | Permission denied on add | Use a playlist **you own** (not followed/mixes); sign out/in after updating; confirm account is in User Management |
 | Playlists won't load | Sign out and sign in again |
-| Widget does nothing | Open app once, sign in, select a playlist |
+| No playlists in widget config | Open app → Sign in → **Fetch Playlists** first |
+| Widget shows login required | Open app and sign in to Spotify |
+| Widget does nothing | Configure widget with a playlist; play music in Spotify first |
 | App Groups error | Match App Group ID in entitlements and `SpotifyConfig.swift` |
 | Build signing error | Set Team on both app and widget targets |
 
