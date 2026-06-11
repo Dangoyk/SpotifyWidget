@@ -15,6 +15,24 @@ struct WidgetStatus: Codable, Equatable {
     let isError: Bool
     let isSuccess: Bool
     let updatedAt: Date
+    let trackName: String?
+    let artistName: String?
+
+    init(
+        message: String,
+        isError: Bool,
+        isSuccess: Bool,
+        updatedAt: Date = Date(),
+        trackName: String? = nil,
+        artistName: String? = nil
+    ) {
+        self.message = message
+        self.isError = isError
+        self.isSuccess = isSuccess
+        self.updatedAt = updatedAt
+        self.trackName = trackName
+        self.artistName = artistName
+    }
 }
 
 final class SharedStorage {
@@ -104,12 +122,27 @@ final class SharedStorage {
         return status
     }
 
-    func setWidgetStatus(for playlistID: String, message: String, isError: Bool, isSuccess: Bool) {
+    func setWidgetStatus(
+        for playlistID: String,
+        message: String,
+        isError: Bool,
+        isSuccess: Bool,
+        trackName: String? = nil,
+        artistName: String? = nil,
+        artworkData: Data? = nil
+    ) {
+        if isError {
+            clearWidgetArtwork(for: playlistID)
+        } else if let artworkData {
+            saveWidgetArtwork(artworkData, for: playlistID)
+        }
+
         let status = WidgetStatus(
             message: message,
             isError: isError,
             isSuccess: isSuccess,
-            updatedAt: Date()
+            trackName: trackName,
+            artistName: artistName
         )
         guard let data = try? encoder.encode(status) else { return }
         defaults.set(data, forKey: Keys.widgetStatusPrefix + playlistID)
@@ -118,6 +151,48 @@ final class SharedStorage {
 
     func clearWidgetStatus(for playlistID: String) {
         defaults.removeObject(forKey: Keys.widgetStatusPrefix + playlistID)
+        clearWidgetArtwork(for: playlistID)
         persist()
+    }
+
+    func widgetArtworkURL(for playlistID: String) -> URL? {
+        guard usesAppGroup, let url = artworkFileURL(for: playlistID) else { return nil }
+        return FileManager.default.fileExists(atPath: url.path) ? url : nil
+    }
+
+    @discardableResult
+    func saveWidgetArtwork(_ data: Data, for playlistID: String) -> URL? {
+        guard let fileURL = artworkFileURL(for: playlistID) else { return nil }
+
+        do {
+            try FileManager.default.createDirectory(
+                at: fileURL.deletingLastPathComponent(),
+                withIntermediateDirectories: true
+            )
+            try data.write(to: fileURL, options: .atomic)
+            return fileURL
+        } catch {
+            return nil
+        }
+    }
+
+    func clearWidgetArtwork(for playlistID: String) {
+        guard let url = artworkFileURL(for: playlistID),
+              FileManager.default.fileExists(atPath: url.path) else {
+            return
+        }
+        try? FileManager.default.removeItem(at: url)
+    }
+
+    private func artworkFileURL(for playlistID: String) -> URL? {
+        guard let container = FileManager.default.containerURL(
+            forSecurityApplicationGroupIdentifier: suiteName
+        ) else {
+            return nil
+        }
+
+        return container
+            .appendingPathComponent("WidgetArtwork", isDirectory: true)
+            .appendingPathComponent("\(playlistID).jpg")
     }
 }

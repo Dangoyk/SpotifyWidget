@@ -26,15 +26,32 @@ struct CurrentlyPlayingResponse: Decodable {
     }
 }
 
+struct SpotifyImage: Decodable {
+    let url: String
+    let height: Int?
+    let width: Int?
+}
+
+struct SpotifyAlbum: Decodable {
+    let name: String?
+    let images: [SpotifyImage]?
+}
+
+struct SpotifyArtist: Decodable {
+    let name: String?
+}
+
 struct SpotifyPlayableItem: Decodable {
     let id: String?
     let uri: String?
     let name: String?
     let type: String?
     let isLocal: Bool?
+    let album: SpotifyAlbum?
+    let artists: [SpotifyArtist]?
 
     enum CodingKeys: String, CodingKey {
-        case id, uri, name, type
+        case id, uri, name, type, album, artists
         case isLocal = "is_local"
     }
 
@@ -44,6 +61,30 @@ struct SpotifyPlayableItem: Decodable {
         guard let uri, uri.hasPrefix("spotify:track:") else { return false }
         return true
     }
+
+    var primaryArtist: String? {
+        artists?.first?.name
+    }
+
+    var artworkURL: URL? {
+        guard let images = album?.images, !images.isEmpty else { return nil }
+
+        let targetSize = 150
+        let sorted = images.sorted { ($0.height ?? 0) < ($1.height ?? 0) }
+        let closest = sorted.min {
+            abs(($0.height ?? targetSize) - targetSize) < abs(($1.height ?? targetSize) - targetSize)
+        }
+
+        return closest.flatMap { URL(string: $0.url) }
+            ?? sorted.last.flatMap { URL(string: $0.url) }
+    }
+}
+
+struct AddedTrackResult: Equatable {
+    let message: String
+    let trackName: String
+    let artistName: String?
+    let artworkURL: URL?
 }
 
 struct PlaylistsResponse: Decodable {

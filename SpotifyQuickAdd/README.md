@@ -214,23 +214,39 @@ Select your iPhone as run destination → **Run** (`Cmd+R`).
 
 ---
 
-## Part 6: Add and Configure Home Screen Widgets (A+)
+## Part 6: Add and Configure Widgets (A+)
 
-You can add **multiple widgets**, each with a **different playlist**:
+You can add **multiple widgets**, each with a **different playlist** — on the Home Screen or Lock Screen.
+
+### Home Screen widgets
 
 1. Long-press the Home Screen → tap **+**
 2. Search **Spotify Quick Add**
-3. Pick a widget size → **Add Widget**
+3. Pick **Small** or **Medium** → **Add Widget**
 4. When prompted, **choose a playlist** (e.g. Favorites)
 5. Tap **Done**
 6. Repeat to add more widgets with different playlists (Gym, Road Trip, etc.)
+
+### Lock Screen widgets
+
+1. Wake your iPhone and **touch and hold** the Lock Screen
+2. Tap **Customize** → tap the **widget area** above or below the time
+3. Tap **+** and search **Spotify Quick Add**
+4. Pick a style:
+   - **Inline** — one line: “Add to [Playlist]”
+   - **Circular** — tap the **+** button
+   - **Rectangular** — playlist name + “Tap to add current song”
+5. **Choose a playlist** when prompted
+6. Tap **Done** twice to save
+
+Lock Screen widgets use the same playlist configuration as Home Screen widgets. You still need to **Sign in** and **Fetch Playlists** in the app first.
 
 ### Using a widget
 
 1. Play a song in the **Spotify** app
 2. Tap **Add Current Song** on the widget
-3. The widget shows a result, for example:
-   - ✅ Added: Song Name
+3. The widget shows the result with **album art**, **song name**, and **artist** (wrapped text), for example:
+   - Album cover + **Song Name** / Artist
    - ❌ Nothing is currently playing.
    - ❌ Spotify login required. Open the app to sign in.
    - ❌ Please configure this widget with a playlist.

@@ -136,7 +136,7 @@ final class SettingsViewModel: ObservableObject {
         showSuccess("Selected \"\(playlist.name)\".")
     }
 
-    func testAddCurrentSong() async -> Result<String, AppError> {
+    func testAddCurrentSong() async -> Result<AddedTrackResult, AppError> {
         guard isLoggedIn else {
             let error = AppError.loginRequired
             showError(error)
@@ -149,8 +149,8 @@ final class SettingsViewModel: ObservableObject {
         let result = await playlistManager.addCurrentTrackToSelectedPlaylist()
 
         switch result {
-        case .success(let message):
-            showSuccess(message)
+        case .success(let added):
+            showSuccess(added.message)
         case .failure(let error):
             showError(error)
         }

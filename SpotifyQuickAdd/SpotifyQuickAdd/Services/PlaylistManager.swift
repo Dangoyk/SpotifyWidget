@@ -18,14 +18,14 @@ final class PlaylistManager {
         self.isWidgetContext = isWidgetContext
     }
 
-    func addCurrentTrackToSelectedPlaylist() async -> Result<String, AppError> {
+    func addCurrentTrackToSelectedPlaylist() async -> Result<AddedTrackResult, AppError> {
         guard let selectedPlaylist = storage.selectedPlaylist else {
             return .failure(.noPlaylistSelected)
         }
         return await addCurrentTrack(to: selectedPlaylist)
     }
 
-    func addCurrentTrack(to playlist: SelectedPlaylist) async -> Result<String, AppError> {
+    func addCurrentTrack(to playlist: SelectedPlaylist) async -> Result<AddedTrackResult, AppError> {
         tokenProvider.refreshLoginState()
 
         guard tokenProvider.isLoggedIn else {
@@ -57,7 +57,14 @@ final class PlaylistManager {
             let message = isWidgetContext
                 ? "Added: \(trackName)"
                 : "Added \"\(trackName)\" to \"\(playlist.name)\"."
-            return .success(message)
+            return .success(
+                AddedTrackResult(
+                    message: message,
+                    trackName: trackName,
+                    artistName: track.primaryArtist,
+                    artworkURL: track.artworkURL
+                )
+            )
         } catch let error as AppError {
             return .failure(mapErrorForContext(error))
         } catch {
