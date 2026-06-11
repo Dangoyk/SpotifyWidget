@@ -24,6 +24,14 @@
 	<dict>
 		<key>NSExtensionPointIdentifier</key>
 		<string>com.apple.widgetkit-extension</string>
+		<key>NSExtensionAttributes</key>
+		<dict>
+			<key>IntentsSupported</key>
+			<array>
+				<string>ConfigurePlaylistWidgetIntent</string>
+				<string>AddCurrentSongIntent</string>
+			</array>
+		</dict>
 	</dict>
 </dict>
 </plist>

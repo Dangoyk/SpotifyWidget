@@ -55,12 +55,23 @@ final class SharedStorage {
 
     init(suiteName: String = SpotifyConfig.appGroupIdentifier) {
         self.suiteName = suiteName
-        usesAppGroup = UserDefaults(suiteName: suiteName) != nil
-        defaults = UserDefaults(suiteName: suiteName) ?? .standard
+        let hasContainer = FileManager.default.containerURL(
+            forSecurityApplicationGroupIdentifier: suiteName
+        ) != nil
+        usesAppGroup = hasContainer
+        if hasContainer, let groupDefaults = UserDefaults(suiteName: suiteName) {
+            defaults = groupDefaults
+        } else {
+            defaults = .standard
+        }
     }
 
     var isAppGroupAvailable: Bool {
         usesAppGroup
+    }
+
+    var cachedPlaylistCount: Int {
+        cachedPlaylists().count
     }
 
     private func persist() {
@@ -93,23 +104,31 @@ final class SharedStorage {
     func cachePlaylists(_ playlists: [SpotifyPlaylist]) {
         let cached = playlists.map { CachedPlaylist(id: $0.id, name: $0.name) }
         guard let data = try? encoder.encode(cached) else { return }
+
         defaults.set(data, forKey: Keys.cachedPlaylists)
         persist()
+
+        if let fileURL = playlistCacheFileURL {
+            try? data.write(to: fileURL, options: .atomic)
+        }
     }
 
     func clearCachedPlaylists() {
         defaults.removeObject(forKey: Keys.cachedPlaylists)
         persist()
+
+        if let fileURL = playlistCacheFileURL,
+           FileManager.default.fileExists(atPath: fileURL.path) {
+            try? FileManager.default.removeItem(at: fileURL)
+        }
     }
 
     func cachedPlaylists() -> [CachedPlaylist] {
-        guard
-            let data = defaults.data(forKey: Keys.cachedPlaylists),
-            let playlists = try? decoder.decode([CachedPlaylist].self, from: data)
-        else {
-            return []
+        let fromFile = loadCachedPlaylists(from: playlistCacheFileURL)
+        if !fromFile.isEmpty {
+            return fromFile
         }
-        return playlists
+        return loadCachedPlaylists(fromDefaultsKey: Keys.cachedPlaylists)
     }
 
     func widgetStatus(for playlistID: String) -> WidgetStatus? {
@@ -156,8 +175,11 @@ final class SharedStorage {
     }
 
     func widgetArtworkURL(for playlistID: String) -> URL? {
-        guard usesAppGroup, let url = artworkFileURL(for: playlistID) else { return nil }
-        return FileManager.default.fileExists(atPath: url.path) ? url : nil
+        guard let url = artworkFileURL(for: playlistID),
+              FileManager.default.fileExists(atPath: url.path) else {
+            return nil
+        }
+        return url
     }
 
     @discardableResult
@@ -184,6 +206,11 @@ final class SharedStorage {
         try? FileManager.default.removeItem(at: url)
     }
 
+    private var playlistCacheFileURL: URL? {
+        FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: suiteName)?
+            .appendingPathComponent("cachedPlaylists.json")
+    }
+
     private func artworkFileURL(for playlistID: String) -> URL? {
         guard let container = FileManager.default.containerURL(
             forSecurityApplicationGroupIdentifier: suiteName
@@ -193,6 +220,29 @@ final class SharedStorage {
 
         return container
             .appendingPathComponent("WidgetArtwork", isDirectory: true)
-            .appendingPathComponent("\(playlistID).jpg")
+            .appendingPathComponent("\(sanitizedFileComponent(playlistID)).jpg")
+    }
+
+    private func loadCachedPlaylists(from url: URL?) -> [CachedPlaylist] {
+        guard let url,
+              let data = try? Data(contentsOf: url),
+              let playlists = try? decoder.decode([CachedPlaylist].self, from: data) else {
+            return []
+        }
+        return playlists
+    }
+
+    private func loadCachedPlaylists(fromDefaultsKey key: String) -> [CachedPlaylist] {
+        guard
+            let data = defaults.data(forKey: key),
+            let playlists = try? decoder.decode([CachedPlaylist].self, from: data)
+        else {
+            return []
+        }
+        return playlists
+    }
+
+    private func sanitizedFileComponent(_ value: String) -> String {
+        value.replacingOccurrences(of: "/", with: "_")
     }
 }

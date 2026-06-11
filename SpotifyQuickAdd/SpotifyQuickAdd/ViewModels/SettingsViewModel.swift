@@ -1,4 +1,5 @@
 import Foundation
+import WidgetKit
 
 @MainActor
 final class SettingsViewModel: ObservableObject {
@@ -8,11 +9,13 @@ final class SettingsViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var statusMessage: String?
     @Published var isError = false
+    @Published private(set) var cachedPlaylistCount = 0
 
     private let authService: SpotifyAuthService
     private let apiService: SpotifyAPIService
     private let playlistManager: PlaylistManager
     private let storage: SharedStorage
+    private var didAttemptPlaylistBootstrap = false
 
     init(
         authService: SpotifyAuthService,
@@ -32,6 +35,15 @@ final class SettingsViewModel: ObservableObject {
         authService.refreshLoginState()
         isLoggedIn = authService.isLoggedIn
         selectedPlaylist = storage.selectedPlaylist
+        refreshCachedPlaylistCount()
+
+        guard isLoggedIn, cachedPlaylistCount == 0, !didAttemptPlaylistBootstrap else { return }
+        didAttemptPlaylistBootstrap = true
+        Task { await fetchPlaylists(preserveStatusMessage: true) }
+    }
+
+    func refreshCachedPlaylistCount() {
+        cachedPlaylistCount = storage.cachedPlaylistCount
     }
 
     func handleIncomingURL(_ url: URL) async {
@@ -83,6 +95,9 @@ final class SettingsViewModel: ObservableObject {
         storage.selectedPlaylist = nil
         storage.clearCachedPlaylists()
         isLoggedIn = false
+        didAttemptPlaylistBootstrap = false
+        refreshCachedPlaylistCount()
+        WidgetCenter.shared.reloadTimelines(ofKind: SpotifyConfig.widgetKind)
         showSuccess("Signed out of Spotify.")
     }
 
@@ -100,6 +115,8 @@ final class SettingsViewModel: ObservableObject {
         do {
             playlists = try await apiService.fetchEditablePlaylists()
             storage.cachePlaylists(playlists)
+            refreshCachedPlaylistCount()
+            WidgetCenter.shared.reloadTimelines(ofKind: SpotifyConfig.widgetKind)
 
             if let selected = selectedPlaylist,
                !playlists.contains(where: { $0.id == selected.id }) {

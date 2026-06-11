@@ -28,7 +28,7 @@ final class KeychainManager {
 
     func save(_ value: String, for key: KeychainKey) throws {
         let data = Data(value.utf8)
-        var query = baseQuery(for: key.rawValue)
+        var query = baseQuery(for: key.rawValue, accessGroup: accessGroup)
 
         SecItemDelete(query as CFDictionary)
 
@@ -42,7 +42,49 @@ final class KeychainManager {
     }
 
     func read(_ key: KeychainKey) throws -> String? {
-        var query = baseQuery(for: key.rawValue)
+        if let value = try readValue(for: key.rawValue, accessGroup: accessGroup) {
+            return value
+        }
+
+        if accessGroup != nil {
+            return try readValue(for: key.rawValue, accessGroup: nil)
+        }
+
+        return nil
+    }
+
+    func delete(_ key: KeychainKey) throws {
+        let status = SecItemDelete(baseQuery(for: key.rawValue, accessGroup: accessGroup) as CFDictionary)
+        if accessGroup != nil {
+            _ = SecItemDelete(baseQuery(for: key.rawValue, accessGroup: nil) as CFDictionary)
+        }
+        guard status == errSecSuccess || status == errSecItemNotFound else {
+            throw KeychainError.deleteFailed(status)
+        }
+    }
+
+    func clearAll() {
+        for key in [KeychainKey.accessToken, .refreshToken, .expirationDate] {
+            try? delete(key)
+        }
+    }
+
+    private func baseQuery(for account: String, accessGroup: String?) -> [String: Any] {
+        var query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: service,
+            kSecAttrAccount as String: account
+        ]
+
+        if let accessGroup {
+            query[kSecAttrAccessGroup as String] = accessGroup
+        }
+
+        return query
+    }
+
+    private func readValue(for account: String, accessGroup: String?) throws -> String? {
+        var query = baseQuery(for: account, accessGroup: accessGroup)
         query[kSecReturnData as String] = true
         query[kSecMatchLimit as String] = kSecMatchLimitOne
 
@@ -62,34 +104,5 @@ final class KeychainManager {
         }
 
         return string
-    }
-
-    func delete(_ key: KeychainKey) throws {
-        let query = baseQuery(for: key.rawValue)
-
-        let status = SecItemDelete(query as CFDictionary)
-        guard status == errSecSuccess || status == errSecItemNotFound else {
-            throw KeychainError.deleteFailed(status)
-        }
-    }
-
-    func clearAll() {
-        for key in [KeychainKey.accessToken, .refreshToken, .expirationDate] {
-            try? delete(key)
-        }
-    }
-
-    private func baseQuery(for account: String) -> [String: Any] {
-        var query: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: service,
-            kSecAttrAccount as String: account
-        ]
-
-        if let accessGroup {
-            query[kSecAttrAccessGroup as String] = accessGroup
-        }
-
-        return query
     }
 }

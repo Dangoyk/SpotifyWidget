@@ -42,6 +42,10 @@
 		B10000000000000000000035 /* ConfigurePlaylistWidgetIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000029 /* ConfigurePlaylistWidgetIntent.swift */; };
 		B10000000000000000000036 /* AddCurrentSongIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000030 /* AddCurrentSongIntent.swift */; };
 		B10000000000000000000037 /* WidgetAddSongLock.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000031 /* WidgetAddSongLock.swift */; };
+		B10000000000000000000038 /* PlaylistCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000037 /* PlaylistCatalog.swift */; };
+		B10000000000000000000039 /* PlaylistEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000028 /* PlaylistEntity.swift */; };
+		B10000000000000000000040 /* ConfigurePlaylistWidgetIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000029 /* ConfigurePlaylistWidgetIntent.swift */; };
+		B10000000000000000000041 /* PlaylistCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000037 /* PlaylistCatalog.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -94,6 +98,7 @@
 		F10000000000000000000029 /* ConfigurePlaylistWidgetIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigurePlaylistWidgetIntent.swift; sourceTree = "<group>"; };
 		F10000000000000000000030 /* AddCurrentSongIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddCurrentSongIntent.swift; sourceTree = "<group>"; };
 		F10000000000000000000031 /* WidgetAddSongLock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetAddSongLock.swift; sourceTree = "<group>"; };
+		F10000000000000000000037 /* PlaylistCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaylistCatalog.swift; sourceTree = "<group>"; };
 		F10000000000000000000022 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		F10000000000000000000023 /* SpotifyQuickAdd.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SpotifyQuickAdd.entitlements; sourceTree = "<group>"; };
 		F10000000000000000000024 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -231,6 +236,7 @@
 			isa = PBXGroup;
 			children = (
 				F10000000000000000000014 /* PKCEHelper.swift */,
+				F10000000000000000000037 /* PlaylistCatalog.swift */,
 				F10000000000000000000015 /* SharedStorage.swift */,
 				F10000000000000000000016 /* WebAuthPresentationContextProvider.swift */,
 			);
@@ -354,6 +360,9 @@
 				B10000000000000000000016 /* WebAuthPresentationContextProvider.swift in Sources */,
 				B10000000000000000000023 /* SpotifyTokenProviding.swift in Sources */,
 				B10000000000000000000024 /* SpotifyTokenProvider.swift in Sources */,
+				B10000000000000000000039 /* PlaylistEntity.swift in Sources */,
+				B10000000000000000000040 /* ConfigurePlaylistWidgetIntent.swift in Sources */,
+				B10000000000000000000041 /* PlaylistCatalog.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -376,6 +385,7 @@
 				B10000000000000000000035 /* ConfigurePlaylistWidgetIntent.swift in Sources */,
 				B10000000000000000000036 /* AddCurrentSongIntent.swift in Sources */,
 				B10000000000000000000037 /* WidgetAddSongLock.swift in Sources */,
+				B10000000000000000000038 /* PlaylistCatalog.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -15,33 +15,25 @@ struct PlaylistEntity: AppEntity, Identifiable, Codable, Sendable {
 
 struct PlaylistEntityQuery: EntityQuery, EntityStringQuery {
     func entities(for identifiers: [PlaylistEntity.ID]) async throws -> [PlaylistEntity] {
-        let cached = SharedStorage.shared.cachedPlaylists()
-        let cachedByID = Dictionary(uniqueKeysWithValues: cached.map { ($0.id, $0) })
+        let all = await PlaylistCatalog.allEntities()
+        var byID: [String: PlaylistEntity] = [:]
+        for entity in all {
+            byID[entity.id] = entity
+        }
 
         return identifiers.map { id in
-            if let playlist = cachedByID[id] {
-                return PlaylistEntity(id: playlist.id, name: playlist.name)
-            }
-            return PlaylistEntity(id: id, name: "Playlist")
+            byID[id] ?? PlaylistEntity(id: id, name: "Playlist")
         }
     }
 
     func suggestedEntities() async throws -> [PlaylistEntity] {
-        mapCachedPlaylists(SharedStorage.shared.cachedPlaylists())
+        await PlaylistCatalog.allEntities()
     }
 
     func entities(matching string: String) async throws -> [PlaylistEntity] {
-        let cached = SharedStorage.shared.cachedPlaylists()
-        guard !string.isEmpty else {
-            return mapCachedPlaylists(cached)
-        }
+        let all = await PlaylistCatalog.allEntities()
+        guard !string.isEmpty else { return all }
 
-        return mapCachedPlaylists(
-            cached.filter { $0.name.localizedCaseInsensitiveContains(string) }
-        )
-    }
-
-    private func mapCachedPlaylists(_ playlists: [CachedPlaylist]) -> [PlaylistEntity] {
-        playlists.map { PlaylistEntity(id: $0.id, name: $0.name) }
+        return all.filter { $0.name.localizedCaseInsensitiveContains(string) }
     }
 }

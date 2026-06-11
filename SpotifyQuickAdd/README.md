@@ -296,7 +296,7 @@ If your Spotify app is in **Development Mode**:
 | "INVALID_CLIENT" | Client ID typo or redirect URI mismatch |
 | Permission denied on add | Use a playlist **you own** (not followed/mixes); sign out/in after updating; confirm account is in User Management |
 | Playlists won't load | Sign out and sign in again |
-| No playlists in widget config | Open app → Sign in → **Fetch Playlists** first |
+| No playlists in widget config | Open app → Sign in → wait for green “X playlists ready” message. Confirm App Groups match on both targets. Delete and re-add the widget after fetching. |
 | Widget shows login required | Open app and sign in to Spotify |
 | Widget does nothing | Configure widget with a playlist; play music in Spotify first |
 | App Groups error | Match App Group ID in entitlements and `SpotifyConfig.swift` |

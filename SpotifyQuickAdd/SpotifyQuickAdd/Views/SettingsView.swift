@@ -32,9 +32,21 @@ struct SettingsView: View {
             }
 
             Section("Playlist") {
-                Text("Fetch playlists here first so they appear when configuring Home Screen widgets. Only playlists you own are shown.")
+                Text("Fetch playlists before configuring widgets. Only playlists you own are shown.")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
+
+                if viewModel.isLoggedIn {
+                    if viewModel.cachedPlaylistCount > 0 {
+                        Text("\(viewModel.cachedPlaylistCount) playlist(s) ready for widget setup.")
+                            .font(.footnote)
+                            .foregroundStyle(.green)
+                    } else {
+                        Text("No playlists cached yet. Tap Fetch Playlists, then try configuring a widget again.")
+                            .font(.footnote)
+                            .foregroundStyle(.orange)
+                    }
+                }
 
                 if let selected = viewModel.selectedPlaylist {
                     Text("Selected: \(selected.name)")
@@ -58,8 +70,8 @@ struct SettingsView: View {
                 }
             }
 
-            Section("Home Screen Widgets (A+)") {
-                Text("After fetching playlists, add widgets from the Home Screen gallery. Configure each widget with a different playlist (Favorites, Gym, etc.).")
+            Section("Widgets") {
+                Text("After fetching playlists, add widgets from the Home Screen or Lock Screen gallery. Configure each widget with a different playlist.")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }
