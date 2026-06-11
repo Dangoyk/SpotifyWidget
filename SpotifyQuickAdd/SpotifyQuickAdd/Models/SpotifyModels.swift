@@ -78,13 +78,34 @@ struct SpotifyPlaylistOwner: Decodable {
     }
 }
 
-struct PlaylistTracksResponse: Decodable {
-    let items: [PlaylistTrackItem]
+struct SpotifyUser: Decodable {
+    let id: String
+    let displayName: String?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case displayName = "display_name"
+    }
+}
+
+struct PlaylistItemsResponse: Decodable {
+    let items: [PlaylistContentItem]
     let next: String?
 }
 
-struct PlaylistTrackItem: Decodable {
-    let track: SpotifyPlayableItem?
+struct PlaylistContentItem: Decodable {
+    let item: SpotifyPlayableItem?
+
+    enum CodingKeys: String, CodingKey {
+        case item
+        case track
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        item = try container.decodeIfPresent(SpotifyPlayableItem.self, forKey: .item)
+            ?? container.decodeIfPresent(SpotifyPlayableItem.self, forKey: .track)
+    }
 }
 
 struct AddTracksRequest: Encodable {

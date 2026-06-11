@@ -34,6 +34,23 @@ final class SettingsViewModel: ObservableObject {
         selectedPlaylist = storage.selectedPlaylist
     }
 
+    func handleOAuthCallback(url: URL) async {
+        isLoading = true
+        clearStatus()
+
+        do {
+            try await authService.handleCallback(url: url)
+            isLoggedIn = authService.isLoggedIn
+            showSuccess("Signed in to Spotify.")
+        } catch let error as AppError {
+            showError(error)
+        } catch {
+            showError(.networkFailure(error.localizedDescription))
+        }
+
+        isLoading = false
+    }
+
     func login() async {
         isLoading = true
         clearStatus()
@@ -70,11 +87,18 @@ final class SettingsViewModel: ObservableObject {
         clearStatus()
 
         do {
-            playlists = try await apiService.fetchUserPlaylists()
+            playlists = try await apiService.fetchEditablePlaylists()
+
+            if let selected = selectedPlaylist,
+               !playlists.contains(where: { $0.id == selected.id }) {
+                selectedPlaylist = nil
+                storage.selectedPlaylist = nil
+            }
+
             if playlists.isEmpty {
-                showSuccess("No playlists found.")
+                showSuccess("No editable playlists found. Create a playlist in Spotify first.")
             } else {
-                showSuccess("Loaded \(playlists.count) playlist(s).")
+                showSuccess("Loaded \(playlists.count) editable playlist(s).")
             }
         } catch let error as AppError {
             showError(error)

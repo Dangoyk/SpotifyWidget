@@ -1,5 +1,6 @@
 import Foundation
 
+@MainActor
 final class SpotifyAPIService {
     private let authService: SpotifyAuthService
     private let session: URLSession
@@ -45,6 +46,34 @@ final class SpotifyAPIService {
         }
 
         return item
+    }
+
+    func fetchCurrentUser() async throws -> SpotifyUser {
+        let url = SpotifyConfig.apiBaseURL.appendingPathComponent("me")
+        let (data, response) = try await authorizedRequest(url: url, method: "GET")
+
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw AppError.networkFailure("Could not fetch Spotify profile.")
+        }
+
+        guard (200...299).contains(httpResponse.statusCode) else {
+            throw mapHTTPError(statusCode: httpResponse.statusCode, data: data, defaultMessage: "Could not fetch Spotify profile.")
+        }
+
+        do {
+            return try JSONDecoder().decode(SpotifyUser.self, from: data)
+        } catch {
+            throw AppError.networkFailure("Could not parse Spotify profile response.")
+        }
+    }
+
+    func fetchEditablePlaylists() async throws -> [SpotifyPlaylist] {
+        let currentUser = try await fetchCurrentUser()
+        let allPlaylists = try await fetchUserPlaylists()
+
+        return allPlaylists.filter { playlist in
+            playlist.owner?.id == currentUser.id
+        }
     }
 
     func fetchUserPlaylists() async throws -> [SpotifyPlaylist] {
@@ -96,7 +125,7 @@ final class SpotifyAPIService {
         var nextURL: URL? = SpotifyConfig.apiBaseURL
             .appendingPathComponent("playlists")
             .appendingPathComponent(playlistId)
-            .appendingPathComponent("tracks")
+            .appendingPathComponent("items")
 
         var isFirstPage = true
 
@@ -105,7 +134,7 @@ final class SpotifyAPIService {
             if isFirstPage {
                 components?.queryItems = [
                     URLQueryItem(name: "limit", value: "100"),
-                    URLQueryItem(name: "fields", value: "items(track(uri,id,type,is_local)),next")
+                    URLQueryItem(name: "fields", value: "items(item(uri,id,type,is_local)),next")
                 ]
                 isFirstPage = false
             }
@@ -117,22 +146,22 @@ final class SpotifyAPIService {
             let (data, response) = try await authorizedRequest(url: requestURL, method: "GET")
 
             guard let httpResponse = response as? HTTPURLResponse else {
-                throw AppError.networkFailure("Could not read playlist tracks.")
+                throw AppError.networkFailure("Could not read playlist items.")
             }
 
             guard (200...299).contains(httpResponse.statusCode) else {
-                throw mapHTTPError(statusCode: httpResponse.statusCode, data: data, defaultMessage: "Could not read playlist tracks.")
+                throw mapHTTPError(statusCode: httpResponse.statusCode, data: data, defaultMessage: "Could not read playlist items.")
             }
 
-            let page: PlaylistTracksResponse
+            let page: PlaylistItemsResponse
             do {
-                page = try JSONDecoder().decode(PlaylistTracksResponse.self, from: data)
+                page = try JSONDecoder().decode(PlaylistItemsResponse.self, from: data)
             } catch {
-                throw AppError.networkFailure("Could not parse playlist tracks response.")
+                throw AppError.networkFailure("Could not parse playlist items response.")
             }
 
-            for item in page.items {
-                if let uri = item.track?.uri, uri == trackURI {
+            for playlistItem in page.items {
+                if let uri = playlistItem.item?.uri, uri == trackURI {
                     return true
                 }
             }
@@ -151,7 +180,7 @@ final class SpotifyAPIService {
         let url = SpotifyConfig.apiBaseURL
             .appendingPathComponent("playlists")
             .appendingPathComponent(playlistId)
-            .appendingPathComponent("tracks")
+            .appendingPathComponent("items")
 
         let body = AddTracksRequest(uris: [trackURI])
         let encodedBody = try JSONEncoder().encode(body)
@@ -160,10 +189,6 @@ final class SpotifyAPIService {
 
         guard let httpResponse = response as? HTTPURLResponse else {
             throw AppError.networkFailure("Could not add track to playlist.")
-        }
-
-        if httpResponse.statusCode == 403 {
-            throw AppError.permissionDenied
         }
 
         guard (200...299).contains(httpResponse.statusCode) else {
@@ -196,10 +221,13 @@ final class SpotifyAPIService {
         }
 
         if statusCode == 403 {
+            if let message = Self.spotifyErrorMessage(from: data), !message.isEmpty {
+                return .networkFailure(message)
+            }
             return .permissionDenied
         }
 
-        if let message = Self.spotifyErrorMessage(from: data) {
+        if let message = Self.spotifyErrorMessage(from: data), !message.isEmpty {
             return .networkFailure(message)
         }
 

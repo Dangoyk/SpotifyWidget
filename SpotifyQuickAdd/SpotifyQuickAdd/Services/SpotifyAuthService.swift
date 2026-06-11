@@ -23,6 +23,10 @@ final class SpotifyAuthService: NSObject, ObservableObject {
     }
 
     func startLogin() async throws {
+        guard SpotifyConfig.clientID != "YOUR_SPOTIFY_CLIENT_ID", !SpotifyConfig.clientID.isEmpty else {
+            throw AppError.unknown("Add your Spotify Client ID in SpotifyConfig.swift before signing in.")
+        }
+
         let verifier = PKCEHelper.generateCodeVerifier()
         pendingCodeVerifier = verifier
         UserDefaults.standard.set(verifier, forKey: codeVerifierDefaultsKey)
@@ -65,8 +69,13 @@ final class SpotifyAuthService: NSObject, ObservableObject {
                         return
                     }
 
+                    guard let self else {
+                        continuation.resume(throwing: AppError.unknown("Spotify login session ended unexpectedly."))
+                        return
+                    }
+
                     do {
-                        try await self?.handleCallback(url: callbackURL)
+                        try await self.handleCallback(url: callbackURL)
                         continuation.resume()
                     } catch {
                         continuation.resume(throwing: error)

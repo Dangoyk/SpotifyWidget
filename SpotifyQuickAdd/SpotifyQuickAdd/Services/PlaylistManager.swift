@@ -1,5 +1,6 @@
 import Foundation
 
+@MainActor
 final class PlaylistManager {
     private let authService: SpotifyAuthService
     private let apiService: SpotifyAPIService

@@ -38,6 +38,10 @@ struct SpotifyQuickAddApp: App {
         guard url.scheme == SpotifyConfig.urlScheme else { return }
 
         switch url.host {
+        case "callback":
+            Task {
+                await settingsViewModel.handleOAuthCallback(url: url)
+            }
         case "add-current-song":
             Task {
                 await addSongViewModel.addCurrentSongFromWidget()

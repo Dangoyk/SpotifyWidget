@@ -186,12 +186,21 @@ The widget opens the app, which:
 - `playlist-read-private`
 - `playlist-read-collaborative`
 
+## Spotify Development Mode (important)
+
+If your Spotify app is in **Development Mode**:
+
+1. The **app owner** must have **Spotify Premium**
+2. Each Spotify account that signs into your iPhone app must be added under **User Management** in the Developer Dashboard
+3. Spotify changed playlist APIs in **February 2026** — this project uses the new `/playlists/{id}/items` endpoints (not the old `/tracks` endpoints)
+
 ## Troubleshooting
 
 | Problem | Fix |
 |---------|-----|
 | Login fails immediately | Check Client ID and redirect URI in Spotify Dashboard |
 | "INVALID_CLIENT" | Client ID typo or redirect URI mismatch |
+| Permission denied on add | Use a playlist **you own** (not followed/mixes); sign out/in after updating; confirm account is in User Management |
 | Playlists won't load | Sign out and sign in again |
 | Widget does nothing | Open app once, sign in, select a playlist |
 | App Groups error | Match App Group ID in entitlements and `SpotifyConfig.swift` |

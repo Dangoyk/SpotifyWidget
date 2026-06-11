@@ -26,6 +26,10 @@ struct SettingsView: View {
             }
 
             Section("Playlist") {
+                Text("Only playlists you own are shown. Followed playlists and Spotify mixes cannot be edited.")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+
                 if let selected = viewModel.selectedPlaylist {
                     Text("Selected: \(selected.name)")
                         .font(.subheadline)
