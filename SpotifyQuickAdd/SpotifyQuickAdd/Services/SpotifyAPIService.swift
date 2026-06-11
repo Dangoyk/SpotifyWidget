@@ -44,7 +44,41 @@ final class SpotifyAPIService {
             throw AppError.unsupportedContent
         }
 
-        return item
+        return try await itemWithArtwork(item)
+    }
+
+    func fetchTrack(id: String) async throws -> SpotifyPlayableItem {
+        let url = SpotifyConfig.apiBaseURL
+            .appendingPathComponent("tracks")
+            .appendingPathComponent(id)
+        let (data, response) = try await authorizedRequest(url: url, method: "GET")
+
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw AppError.networkFailure("Could not fetch track details.")
+        }
+
+        guard (200...299).contains(httpResponse.statusCode) else {
+            throw mapHTTPError(statusCode: httpResponse.statusCode, data: data, defaultMessage: "Could not fetch track details.")
+        }
+
+        do {
+            return try JSONDecoder().decode(SpotifyPlayableItem.self, from: data)
+        } catch {
+            throw AppError.networkFailure("Could not parse track details.")
+        }
+    }
+
+    private func itemWithArtwork(_ item: SpotifyPlayableItem) async throws -> SpotifyPlayableItem {
+        guard item.artworkURL == nil, let id = item.id else {
+            return item
+        }
+
+        guard let detailed = try? await fetchTrack(id: id),
+              detailed.artworkURL != nil else {
+            return item
+        }
+
+        return detailed
     }
 
     func fetchCurrentUser() async throws -> SpotifyUser {

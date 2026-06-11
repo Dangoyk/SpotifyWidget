@@ -1,5 +1,6 @@
 import AppIntents
 import SwiftUI
+import UIKit
 import WidgetKit
 
 struct PlaylistWidgetEntry: TimelineEntry {
@@ -11,7 +12,7 @@ struct PlaylistWidgetEntry: TimelineEntry {
     let statusIsSuccess: Bool
     let trackName: String?
     let artistName: String?
-    let artworkFileURL: URL?
+    let artworkData: Data?
 }
 
 struct AddCurrentSongWidgetView: View {
@@ -33,15 +34,13 @@ struct AddCurrentSongWidgetView: View {
 }
 
 struct WidgetArtworkImage: View {
-    let fileURL: URL?
+    let artworkData: Data?
     var size: CGFloat = 56
     var cornerRadius: CGFloat = 8
 
     var body: some View {
         Group {
-            if let fileURL,
-               let data = try? Data(contentsOf: fileURL),
-               let uiImage = UIImage(data: data) {
+            if let artworkData, let uiImage = UIImage(data: artworkData) {
                 Image(uiImage: uiImage)
                     .resizable()
                     .aspectRatio(contentMode: .fill)
@@ -63,62 +62,70 @@ struct HomeScreenWidgetView: View {
     @Environment(\.widgetFamily) private var widgetFamily
     let entry: PlaylistWidgetEntry
 
+    private var artworkSize: CGFloat {
+        widgetFamily == .systemMedium ? 64 : 52
+    }
+
     var body: some View {
-        HStack(alignment: .top, spacing: 10) {
-            if entry.showsArtwork {
-                WidgetArtworkImage(
-                    fileURL: entry.artworkFileURL,
-                    size: widgetFamily == .systemMedium ? 76 : 58,
-                    cornerRadius: 10
-                )
-            }
+        VStack(alignment: .leading, spacing: 8) {
+            Text(entry.playlistName)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
 
-            VStack(alignment: .leading, spacing: 6) {
-                Text(entry.playlistName)
-                    .font(.headline)
-                    .multilineTextAlignment(.leading)
-                    .fixedSize(horizontal: false, vertical: true)
+            if entry.hasTrackResult {
+                HStack(alignment: .top, spacing: 8) {
+                    WidgetArtworkImage(
+                        artworkData: entry.artworkData,
+                        size: artworkSize,
+                        cornerRadius: 8
+                    )
 
-                if let playlist = entry.playlistEntity {
-                    Button(intent: AddCurrentSongIntent(playlist: playlist)) {
-                        Label("Add Current Song", systemImage: "plus.circle.fill")
-                            .font(.subheadline.weight(.semibold))
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .tint(Color(red: 0.11, green: 0.73, blue: 0.33))
-                } else {
-                    Text("Please configure this widget with a playlist.")
-                        .font(.caption)
-                        .foregroundStyle(.red)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-
-                if entry.statusIsSuccess, let trackName = entry.trackName {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(trackName)
+                        Text(entry.trackName ?? "")
                             .font(.subheadline.weight(.semibold))
-                            .multilineTextAlignment(.leading)
-                            .fixedSize(horizontal: false, vertical: true)
+                            .lineLimit(2)
+                            .minimumScaleFactor(0.85)
                         if let artistName = entry.artistName {
                             Text(artistName)
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
-                                .multilineTextAlignment(.leading)
-                                .fixedSize(horizontal: false, vertical: true)
+                                .lineLimit(2)
+                                .minimumScaleFactor(0.85)
+                        }
+                        if entry.isDuplicateTrackResult {
+                            Text("Already in playlist")
+                                .font(.caption2)
+                                .foregroundStyle(.orange)
+                                .lineLimit(1)
                         }
                     }
-                } else if let status = entry.statusMessage {
-                    Text(entry.cleanStatusMessage)
-                        .font(.caption2)
-                        .foregroundStyle(entry.statusIsError ? .red : .green)
-                        .multilineTextAlignment(.leading)
-                        .fixedSize(horizontal: false, vertical: true)
                 }
+            } else if entry.statusMessage != nil {
+                Text(entry.cleanStatusMessage)
+                    .font(.caption2)
+                    .foregroundStyle(entry.statusTextColor)
+                    .lineLimit(3)
+            }
+
+            if let playlist = entry.playlistEntity {
+                Button(intent: AddCurrentSongIntent(playlist: playlist)) {
+                    Label("Add Current Song", systemImage: "plus.circle.fill")
+                        .font(.caption.weight(.semibold))
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+                .tint(Color(red: 0.11, green: 0.73, blue: 0.33))
+            } else {
+                Text("Configure this widget with a playlist.")
+                    .font(.caption2)
+                    .foregroundStyle(.red)
+                    .lineLimit(2)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .padding()
+        .padding(12)
         .containerBackground(for: .widget) {
             Color(red: 0.08, green: 0.08, blue: 0.10)
         }
@@ -133,8 +140,7 @@ struct LockScreenInlineWidgetView: View {
             Button(intent: AddCurrentSongIntent(playlist: playlist)) {
                 Label {
                     Text(entry.inlineActionText)
-                        .multilineTextAlignment(.leading)
-                        .fixedSize(horizontal: false, vertical: true)
+                        .lineLimit(2)
                 } icon: {
                     Image(systemName: entry.statusIsSuccess ? "checkmark.circle" : "music.note.list")
                 }
@@ -154,8 +160,7 @@ struct LockScreenCircularWidgetView: View {
             Button(intent: AddCurrentSongIntent(playlist: playlist)) {
                 ZStack {
                     if entry.showsArtwork,
-                       let fileURL = entry.artworkFileURL,
-                       let data = try? Data(contentsOf: fileURL),
+                       let data = entry.artworkData,
                        let uiImage = UIImage(data: data) {
                         Image(uiImage: uiImage)
                             .resizable()
@@ -188,7 +193,7 @@ struct LockScreenRectangularWidgetView: View {
                 HStack(alignment: .top, spacing: 8) {
                     if entry.showsArtwork {
                         WidgetArtworkImage(
-                            fileURL: entry.artworkFileURL,
+                            artworkData: entry.artworkData,
                             size: 44,
                             cornerRadius: 6
                         )
@@ -197,26 +202,22 @@ struct LockScreenRectangularWidgetView: View {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(entry.playlistName)
                             .font(.headline)
-                            .multilineTextAlignment(.leading)
-                            .fixedSize(horizontal: false, vertical: true)
+                            .lineLimit(1)
 
-                        if entry.statusIsSuccess, let trackName = entry.trackName {
+                        if entry.hasTrackResult, let trackName = entry.trackName {
                             Text(trackName)
                                 .font(.caption.weight(.semibold))
-                                .multilineTextAlignment(.leading)
-                                .fixedSize(horizontal: false, vertical: true)
+                                .lineLimit(2)
                             if let artistName = entry.artistName {
                                 Text(artistName)
                                     .font(.caption2)
                                     .foregroundStyle(.secondary)
-                                    .multilineTextAlignment(.leading)
-                                    .fixedSize(horizontal: false, vertical: true)
+                                    .lineLimit(1)
                             }
                         } else {
                             Text(entry.lockScreenSubtitle)
                                 .font(.caption)
-                                .multilineTextAlignment(.leading)
-                                .fixedSize(horizontal: false, vertical: true)
+                                .lineLimit(2)
                         }
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -236,8 +237,26 @@ struct LockScreenRectangularWidgetView: View {
 }
 
 private extension PlaylistWidgetEntry {
+    var hasTrackResult: Bool {
+        statusIsSuccess && trackName != nil
+    }
+
+    var isDuplicateTrackResult: Bool {
+        cleanStatusMessage.localizedCaseInsensitiveContains("already in playlist")
+    }
+
     var showsArtwork: Bool {
-        statusIsSuccess && artworkFileURL != nil
+        hasTrackResult && artworkData != nil
+    }
+
+    var statusTextColor: Color {
+        if cleanStatusMessage.localizedCaseInsensitiveContains("already in playlist") {
+            return .orange
+        }
+        if statusIsError {
+            return .red
+        }
+        return .green
     }
 
     var cleanStatusMessage: String {
@@ -307,7 +326,7 @@ struct PlaylistWidgetProvider: AppIntentTimelineProvider {
             statusIsSuccess: false,
             trackName: nil,
             artistName: nil,
-            artworkFileURL: nil
+            artworkData: nil
         )
     }
 
@@ -335,7 +354,7 @@ struct PlaylistWidgetProvider: AppIntentTimelineProvider {
             statusIsSuccess: status?.isSuccess ?? false,
             trackName: status?.trackName,
             artistName: status?.artistName,
-            artworkFileURL: SharedStorage.shared.widgetArtworkURL(for: playlistID)
+            artworkData: SharedStorage.shared.widgetArtworkData(for: playlistID)
         )
     }
 

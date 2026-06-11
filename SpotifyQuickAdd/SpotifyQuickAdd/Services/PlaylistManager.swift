@@ -45,6 +45,17 @@ final class PlaylistManager {
             )
 
             if alreadyExists {
+                let trackName = track.name ?? "Track"
+                if isWidgetContext {
+                    return .success(
+                        AddedTrackResult(
+                            message: "Already in playlist",
+                            trackName: trackName,
+                            artistName: track.primaryArtist,
+                            artworkURL: track.artworkURL
+                        )
+                    )
+                }
                 return .failure(.alreadyInPlaylist)
             }
 

@@ -44,6 +44,7 @@ final class SharedStorage {
         static let selectedPlaylistName = "selectedPlaylistName"
         static let cachedPlaylists = "cachedPlaylistsJSON"
         static let widgetStatusPrefix = "widgetStatus_"
+        static let widgetArtworkDataPrefix = "widgetArtworkData_"
     }
 
     private let defaults: UserDefaults
@@ -150,10 +151,10 @@ final class SharedStorage {
         artistName: String? = nil,
         artworkData: Data? = nil
     ) {
-        if isError {
-            clearWidgetArtwork(for: playlistID)
-        } else if let artworkData {
+        if let artworkData, !artworkData.isEmpty {
             saveWidgetArtwork(artworkData, for: playlistID)
+        } else if isError {
+            clearWidgetArtwork(for: playlistID)
         }
 
         let status = WidgetStatus(
@@ -182,9 +183,28 @@ final class SharedStorage {
         return url
     }
 
+    func widgetArtworkData(for playlistID: String) -> Data? {
+        if let url = widgetArtworkURL(for: playlistID),
+           let data = try? Data(contentsOf: url),
+           !data.isEmpty {
+            return data
+        }
+
+        guard let data = defaults.data(forKey: Keys.widgetArtworkDataPrefix + playlistID),
+              !data.isEmpty else {
+            return nil
+        }
+        return data
+    }
+
     @discardableResult
-    func saveWidgetArtwork(_ data: Data, for playlistID: String) -> URL? {
-        guard let fileURL = artworkFileURL(for: playlistID) else { return nil }
+    func saveWidgetArtwork(_ data: Data, for playlistID: String) -> Bool {
+        defaults.set(data, forKey: Keys.widgetArtworkDataPrefix + playlistID)
+        persist()
+
+        guard let fileURL = artworkFileURL(for: playlistID) else {
+            return true
+        }
 
         do {
             try FileManager.default.createDirectory(
@@ -192,13 +212,16 @@ final class SharedStorage {
                 withIntermediateDirectories: true
             )
             try data.write(to: fileURL, options: .atomic)
-            return fileURL
+            return true
         } catch {
-            return nil
+            return true
         }
     }
 
     func clearWidgetArtwork(for playlistID: String) {
+        defaults.removeObject(forKey: Keys.widgetArtworkDataPrefix + playlistID)
+        persist()
+
         guard let url = artworkFileURL(for: playlistID),
               FileManager.default.fileExists(atPath: url.path) else {
             return

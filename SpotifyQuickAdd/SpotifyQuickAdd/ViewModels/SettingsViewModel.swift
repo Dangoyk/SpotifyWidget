@@ -16,6 +16,7 @@ final class SettingsViewModel: ObservableObject {
     private let playlistManager: PlaylistManager
     private let storage: SharedStorage
     private var didAttemptPlaylistBootstrap = false
+    private var isFetchingPlaylists = false
 
     init(
         authService: SpotifyAuthService,
@@ -107,6 +108,10 @@ final class SettingsViewModel: ObservableObject {
             return
         }
 
+        guard !isFetchingPlaylists else { return }
+
+        isFetchingPlaylists = true
+        didAttemptPlaylistBootstrap = true
         isLoading = true
         if !preserveStatusMessage {
             clearStatus()
@@ -144,6 +149,7 @@ final class SettingsViewModel: ObservableObject {
         }
 
         isLoading = false
+        isFetchingPlaylists = false
     }
 
     func selectPlaylist(_ playlist: SpotifyPlaylist) {
