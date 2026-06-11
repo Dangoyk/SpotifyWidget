@@ -31,8 +31,8 @@ struct SettingsView: View {
                 }
             }
 
-            Section("Playlist") {
-                Text("Fetch playlists before configuring widgets. Only playlists you own are shown.")
+            Section("Widget Playlist") {
+                Text("Pick the playlist your widgets add songs to. Lock Screen widgets use this selection from the app — you do not need to configure them on the lock screen.")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
 
@@ -70,14 +70,18 @@ struct SettingsView: View {
                 }
             }
 
-            Section("Widgets") {
-                Text("After fetching playlists, add widgets from the Home Screen or Lock Screen gallery. Configure each widget with a different playlist.")
+            Section("Add Widgets") {
+                Text("1. Sign in and fetch playlists above\n2. Select a playlist\n3. Add Spotify Quick Add from the Home Screen or Lock Screen widget gallery")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+
+                Text("Optional: long-press a Home Screen widget → Edit Widget to give that widget its own playlist.")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }
 
             Section("Test Workflow") {
-                Text("Test adding to the playlist selected above (app settings). Widgets use their own configured playlist.")
+                Text("Test adding to the playlist selected above. Widgets use the same playlist unless a Home Screen widget was edited separately.")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
 

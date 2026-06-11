@@ -13,6 +13,19 @@ struct PlaylistEntity: AppEntity, Identifiable, Codable, Sendable {
     }
 }
 
+enum WidgetPlaylistResolver {
+    /// Widget system config when available; otherwise the playlist chosen in the app.
+    static func effectivePlaylist(widgetPlaylist: PlaylistEntity?) -> PlaylistEntity? {
+        if let widgetPlaylist {
+            return widgetPlaylist
+        }
+        guard let selected = SharedStorage.shared.selectedPlaylist else {
+            return nil
+        }
+        return PlaylistEntity(id: selected.id, name: selected.name)
+    }
+}
+
 struct PlaylistEntityQuery: EntityQuery, EntityStringQuery {
     func entities(for identifiers: [PlaylistEntity.ID]) async throws -> [PlaylistEntity] {
         let all = await PlaylistCatalog.allEntities()

@@ -128,7 +128,7 @@ struct HomeScreenWidgetView: View {
                 .controlSize(.small)
                 .tint(Color(red: 0.11, green: 0.73, blue: 0.33))
             } else {
-                Text("Configure this widget with a playlist.")
+                Text("Open the app and select a playlist.")
                     .font(.caption2)
                     .foregroundStyle(.red)
                     .lineLimit(2)
@@ -158,7 +158,7 @@ struct LockScreenInlineWidgetView: View {
                 }
                 .buttonStyle(.plain)
             } else {
-                Label("Set up playlist", systemImage: "exclamationmark.triangle")
+                Label("Choose playlist in app", systemImage: "exclamationmark.triangle")
             }
         }
         .containerBackground(.clear, for: .widget)
@@ -240,7 +240,7 @@ struct LockScreenRectangularWidgetView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Spotify Quick Add")
                         .font(.headline)
-                    Text("Configure playlist")
+                    Text("Choose playlist in app")
                         .font(.caption)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -378,7 +378,7 @@ struct PlaylistWidgetProvider: AppIntentTimelineProvider {
 
     func timeline(for configuration: ConfigurePlaylistWidgetIntent, in context: Context) async -> Timeline<PlaylistWidgetEntry> {
         let now = Date()
-        let playlist = configuration.playlist
+        let playlist = WidgetPlaylistResolver.effectivePlaylist(widgetPlaylist: configuration.playlist)
         let playlistID = playlist?.id ?? SharedStorage.unconfiguredWidgetStatusKey
         let nowPlaying = await WidgetNowPlayingFetcher.fetch(for: playlist)
         let showWarning = SharedStorage.shared.shouldShowDuplicateWarning(
@@ -416,7 +416,7 @@ struct PlaylistWidgetProvider: AppIntentTimelineProvider {
     }
 
     private func makeCachedEntry(for configuration: ConfigurePlaylistWidgetIntent) -> PlaylistWidgetEntry {
-        let playlist = configuration.playlist
+        let playlist = WidgetPlaylistResolver.effectivePlaylist(widgetPlaylist: configuration.playlist)
         let playlistID = playlist?.id ?? SharedStorage.unconfiguredWidgetStatusKey
         let nowPlaying = WidgetNowPlayingFetcher.cached(for: playlistID)
         let showWarning = SharedStorage.shared.shouldShowDuplicateWarning(
@@ -438,7 +438,7 @@ struct PlaylistWidgetProvider: AppIntentTimelineProvider {
         showInPlaylistWarning: Bool,
         date: Date
     ) -> PlaylistWidgetEntry {
-        let playlist = configuration.playlist
+        let playlist = WidgetPlaylistResolver.effectivePlaylist(widgetPlaylist: configuration.playlist)
         let playlistName = resolvedPlaylistName(for: playlist)
         let status = widgetStatus(for: playlist)
         let playlistID = playlist?.id ?? SharedStorage.unconfiguredWidgetStatusKey
@@ -462,7 +462,7 @@ struct PlaylistWidgetProvider: AppIntentTimelineProvider {
     }
 
     private func resolvedPlaylistName(for playlist: PlaylistEntity?) -> String {
-        guard let playlist else { return "Not configured" }
+        guard let playlist else { return "Choose playlist in app" }
         let cachedName = SharedStorage.shared.cachedPlaylists()
             .first(where: { $0.id == playlist.id })?
             .name

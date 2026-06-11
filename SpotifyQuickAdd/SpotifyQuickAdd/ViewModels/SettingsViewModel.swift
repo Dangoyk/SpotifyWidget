@@ -156,7 +156,8 @@ final class SettingsViewModel: ObservableObject {
         let selected = SelectedPlaylist(id: playlist.id, name: playlist.name)
         selectedPlaylist = selected
         storage.selectedPlaylist = selected
-        showSuccess("Selected \"\(playlist.name)\".")
+        WidgetCenter.shared.reloadTimelines(ofKind: SpotifyConfig.widgetKind)
+        showSuccess("Selected \"\(playlist.name)\" for widgets.")
     }
 
     func testAddCurrentSong() async -> Result<AddedTrackResult, AppError> {
